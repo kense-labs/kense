@@ -10,9 +10,3 @@ Related repositories:
 
 - [kbox](https://github.com/kense-labs/kbox) — runtime source code
 - [dsh-acp](https://github.com/kense-labs/dsh-acp) — ACP-only DeepSeek Harness distribution; public container image at `ghcr.io/kense-labs/dsh-acp:latest`
-
-## Website
-
-This repository publishes the [Kense organization website](https://kense-labs.github.io/kense/) with GitHub Pages. The site source, component documentation and release build live in [kense-labs/KUI](https://github.com/kense-labs/KUI).
-
-The [publishing workflow](.github/workflows/publish.yml) checks for a new KUI release every five minutes and verifies its SHA-256 checksum before deploying it to GitHub Pages.
