@@ -1,8 +1,8 @@
-# kense
+# Kense
 
 **AI OS.** One API key for heterogeneous compute, models, agents, apps and data capabilities.
 
-kense is a control plane, not an AI application framework. It owns placement, isolation, routing, metering, audit and release. Inference stays in the engines; workloads stay in their sandboxes.
+Kense is a control plane, not an AI application framework. It owns placement, isolation, routing, metering, audit and release. Inference stays in the engines; workloads stay in their sandboxes.
 
 ## Architecture
 
@@ -55,4 +55,8 @@ Capabilities register as URNs before they are exposed, declaring protocol, meter
 
 ## About this repository
 
-This is the organization entry point: architecture, release index and source map. It contains no product code. Licensing is defined per repository in its own LICENSE file.
+This is the organization entry point: architecture, release index and source map. It contains no product code.
+
+## License
+
+[MIT](LICENSE). Component repositories carry their own license files.
