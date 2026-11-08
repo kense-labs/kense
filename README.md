@@ -6,19 +6,9 @@ kense is a control plane, not an AI application framework. It owns placement, is
 
 ## Architecture
 
-```mermaid
-flowchart TB
-  K["One API key"] --> GW["Unified gateway<br/>auth · quota · routing · policy"]
-  GW --> SUP["IaaS → MaaS → TaaS"]
-  GW --> APP["PaaS · AaaS · SaaS"]
-  SUP --> RP["Heterogeneous resource pool<br/>GPU · NPU · CPU · MicroVM"]
-  APP --> RP
-  CP["Control plane<br/>Identity · URN catalog · Metering · Audit · Vault"] -.-> GW
-  CP -.-> SUP
-  CP -.-> APP
-  SC["Actions · Packages · Releases"] -.-> SUP
-  SC -.-> APP
-```
+![AI OS layered architecture — one key through the unified gateway into nine services, five cross-cutting planes, and the heterogeneous resource pool](docs/ai-os-architecture.png)
+
+[Vector source](docs/ai-os-architecture.svg)
 
 The supply side feeds the product side: `IaaS → MaaS → TaaS → PaaS / AaaS → SaaS`. Actions, Packages and Releases cut across every layer and ship changes as **immutable version → alias → traffic weight**, so rollout and rollback use one primitive everywhere.
 

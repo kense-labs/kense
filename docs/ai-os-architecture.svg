@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 680 470" width="680" height="470" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>AI OS 总体分层架构</title>
+<desc>客户端持一把 Key 进入统一网关，网关路由到九类服务；身份、计量、审计、Vault、URN 目录五个横切平面贯穿全栈；底层异构资源池提供算力。</desc>
+<defs>
+  <marker id="osA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M2 1L8 5L2 9" fill="none" stroke="#141413" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+  </marker>
+</defs>
+<rect x="0" y="0" width="680" height="470" rx="14" fill="#F8F6F0"/>
+<g font-family="Menlo, SFMono-Regular, Consolas, monospace">
+<rect x="250" y="20" width="180" height="46" rx="8" fill="#141413"/>
+<text x="340" y="47" font-size="13" fill="#FDFCF9" text-anchor="middle">Clients · One Key</text>
+<path d="M340 66 L340 90" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#osA)"/>
+<rect x="130" y="92" width="420" height="48" rx="8" fill="#141413"/>
+<text x="340" y="112" font-size="12.5" fill="#FDFCF9" text-anchor="middle">Unified Gateway · PEP</text>
+<text x="340" y="130" font-size="11" fill="#FDFCF9" text-anchor="middle">LLM · API · MCP · A2A</text>
+<path d="M340 140 L340 162" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#osA)"/>
+
+<rect x="24" y="164" width="452" height="204" rx="10" fill="none" stroke="#141413" stroke-width="0.9" stroke-dasharray="3 5" opacity="0.45"/>
+<rect x="30" y="176" width="136" height="52" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="98" y="197" font-size="12" fill="#141413" text-anchor="middle">AaaS</text>
+<text x="98" y="215" font-size="11" fill="#7A756C" text-anchor="middle">Actor Runtime</text>
+<rect x="182" y="176" width="136" height="52" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="250" y="197" font-size="12" fill="#141413" text-anchor="middle">SaaS</text>
+<text x="250" y="215" font-size="11" fill="#7A756C" text-anchor="middle">Resource Layer</text>
+<rect x="334" y="176" width="136" height="52" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="402" y="197" font-size="12" fill="#141413" text-anchor="middle">PaaS</text>
+<text x="402" y="215" font-size="11" fill="#7A756C" text-anchor="middle">App Hosting</text>
+<rect x="30" y="240" width="136" height="52" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="98" y="261" font-size="12" fill="#141413" text-anchor="middle">TaaS</text>
+<text x="98" y="279" font-size="11" fill="#7A756C" text-anchor="middle">Post-Training</text>
+<rect x="182" y="240" width="136" height="52" rx="6" fill="#141413"/>
+<text x="250" y="261" font-size="12" fill="#FDFCF9" text-anchor="middle">MaaS</text>
+<text x="250" y="279" font-size="11" fill="#FDFCF9" text-anchor="middle">Model Serving</text>
+<rect x="334" y="240" width="136" height="52" rx="6" fill="#141413"/>
+<text x="402" y="261" font-size="12" fill="#FDFCF9" text-anchor="middle">IaaS</text>
+<text x="402" y="279" font-size="11" fill="#FDFCF9" text-anchor="middle">VM · VPC · Vol</text>
+<rect x="30" y="304" width="136" height="52" rx="6" fill="#FDFCF9" stroke="#C2795A" stroke-width="1.2"/>
+<text x="98" y="325" font-size="12" fill="#141413" text-anchor="middle">Actions</text>
+<text x="98" y="343" font-size="11" fill="#C2795A" text-anchor="middle">CI · CD</text>
+<rect x="182" y="304" width="136" height="52" rx="6" fill="#FDFCF9" stroke="#C2795A" stroke-width="1.2"/>
+<text x="250" y="325" font-size="12" fill="#141413" text-anchor="middle">Packages</text>
+<text x="250" y="343" font-size="11" fill="#C2795A" text-anchor="middle">OCI Artifacts</text>
+<rect x="334" y="304" width="136" height="52" rx="6" fill="#FDFCF9" stroke="#C2795A" stroke-width="1.2"/>
+<text x="402" y="325" font-size="12" fill="#141413" text-anchor="middle">Releases</text>
+<text x="402" y="343" font-size="11" fill="#C2795A" text-anchor="middle">Canary · Rollback</text>
+
+<path d="M476 200 L486 200 M476 264 L486 264 M476 328 L486 328" fill="none" stroke="#141413" stroke-width="0.8" stroke-dasharray="3 4" opacity="0.5"/>
+<rect x="486" y="176" width="164" height="34" rx="5" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="568" y="197" font-size="11" fill="#141413" text-anchor="middle">IDENTITY</text>
+<rect x="486" y="216" width="164" height="34" rx="5" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="568" y="237" font-size="11" fill="#141413" text-anchor="middle">METER</text>
+<rect x="486" y="256" width="164" height="34" rx="5" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="568" y="277" font-size="11" fill="#141413" text-anchor="middle">AUDIT</text>
+<rect x="486" y="296" width="164" height="34" rx="5" fill="#C2795A"/>
+<text x="568" y="317" font-size="11" fill="#FDFCF9" text-anchor="middle">VAULT</text>
+<rect x="486" y="336" width="164" height="34" rx="5" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="568" y="357" font-size="11" fill="#141413" text-anchor="middle">URN REGISTRY</text>
+
+<path d="M250 368 L250 394" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#osA)"/>
+<rect x="130" y="396" width="420" height="54" rx="8" fill="#141413"/>
+<text x="340" y="417" font-size="12.5" fill="#FDFCF9" text-anchor="middle">Heterogeneous Resource Pool</text>
+<text x="340" y="436" font-size="11" fill="#FDFCF9" text-anchor="middle">GPU · CPU · RDMA · Object Storage · Cloud Providers</text>
+</g>
+</svg>
