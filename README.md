@@ -2,7 +2,7 @@
 
 **AI OS.** One API key for heterogeneous compute, models, agents, apps and data capabilities.
 
-Kense is a control plane, not an AI application framework. It owns placement, isolation, routing, metering, audit and release. Inference stays in the engines; workloads stay in their sandboxes.
+Kense is an operating plane, not an AI application framework. It owns placement, isolation, routing, metering, audit and release; inference stays in the engines and workloads stay in their sandboxes.
 
 ## Architecture
 
@@ -10,11 +10,9 @@ Kense is a control plane, not an AI application framework. It owns placement, is
 
 [Vector source](docs/ai-os-architecture.svg)
 
-The supply side feeds the product side: `IaaS → MaaS → TaaS → PaaS / AaaS → SaaS`. Actions, Packages and Releases cut across every layer and ship changes as **immutable version → alias → traffic weight**, so rollout and rollback use one primitive everywhere.
+The supply side feeds the product side: `IaaS → MaaS → TaaS → PaaS / AaaS → SaaS`. Actions, Packages and Releases cut across every layer and ship changes through one primitive — **immutable version → alias → traffic weight** — so rollout and rollback work the same way everywhere.
 
-Trust stops at the edge. The primary key is presented once at the gateway and exchanged for a short-lived scoped credential; downstream services never see it. Sandboxes hold no credentials — the egress gateway injects a secret reference on their behalf.
-
-Capabilities register as URNs before they are exposed, declaring protocol, metering unit, quota dimension, scope and audit level. Every request emits one metered event, so identity, quota, budget, audit and billing form a single chain instead of five disconnected systems.
+One credential, one chain. The primary key is presented once at the gateway and exchanged for a short-lived scoped credential; downstream services never see it and sandboxes hold none. Capabilities register as URNs before exposure, and every request emits one metered event, so identity, quota, budget, audit and billing share a single chain.
 
 ## What each layer owns
 
@@ -32,9 +30,9 @@ Capabilities register as URNs before they are exposed, declaring protocol, meter
 
 ## Start here
 
-- **Get a build** — product distributions ship from [Releases](https://github.com/kense-labs/kense/releases/latest). This repository holds no binaries; use the latest release page rather than a pinned version, which goes stale.
-- **Find the source** — the public repositories are listed below. Components that are still private are intentionally not linked here.
-- **Read the design** — the diagram above is the contract. Code names describe responsibilities, not the product brand.
+- **Get a build** — product distributions ship from [Releases](https://github.com/kense-labs/kense/releases/latest).
+- **Find the source** — public repositories are listed below; this repository contains documentation only.
+- **Read the contract** — the architecture diagram above is the canonical shape of the system.
 
 ## Repositories
 
@@ -46,17 +44,10 @@ Capabilities register as URNs before they are exposed, declaring protocol, meter
 | [KUI](https://github.com/kense-labs/KUI) | Rust UI kit for GPUI, native desktop and WASM web |
 | [kense-labs.github.io](https://github.com/kense-labs/kense-labs.github.io) | Organization website |
 
-## Principles
+## Boundaries
 
-- **One credential, one chain** — a single key carries identity, quota, budget, audit and billing across all services.
-- **Brand-neutral code** — source names describe responsibilities; product identity lives in packaging, not in modules or wire values.
-- **Facts before claims** — no version numbers, no private links, no capabilities that cannot be verified from a public artifact.
-- **Explicit boundaries** — no prompt registry, hosted vector store, standalone LLMOps product, visual orchestrator or marketplace. Those are applications, not operating-system primitives.
-
-## About this repository
-
-This is the organization entry point: architecture, release index and source map. It contains no product code.
+No prompt registry, hosted vector store, standalone LLMOps product, visual orchestrator or marketplace. Those are applications, not operating-system primitives.
 
 ## License
 
-[MIT](LICENSE). Component repositories carry their own license files.
+[MIT](LICENSE). Each component repository carries its own license.
