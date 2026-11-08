@@ -177,7 +177,7 @@ Release / Channel（canary、prod）/ Environment。灰度比例、健康检查�
 ## 从哪里开始
 
 - **获取构建** — 产品发行物发布在 [Releases](https://github.com/kense-labs/kense/releases/latest)。
-- **查找源码** — 公开仓库见下表；本仓库只放文档。
+- **查找源码** — 公开仓库见下表；从 aster 迁出的后端源码在 [`platform/`](platform/)。
 - **阅读契约** — 上方架构图是系统形态的权威描述。
 
 ## 相关仓库
