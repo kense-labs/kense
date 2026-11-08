@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 1120 730" width="1120" height="730" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>Kense OS dependency and context map</title>
+<desc>One key enters the unified gateway and fans out to six service layers. Five cross-cutting planes form a shared kernel, the developer supply chain injects immutable versions, the resource pool supplies capacity, and an orange feedback edge returns production traces from AaaS/SaaS to TaaS.</desc>
+<defs>
+<marker id="aInk" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#141413" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></marker>
+<marker id="aClay" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#C2795A" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></marker>
+<marker id="aNote" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#7A756C" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></marker>
+</defs>
+<rect x="0" y="0" width="1120" height="730" rx="14" fill="#F8F6F0"/>
+<g font-family="Menlo, SFMono-Regular, Consolas, monospace">
+<rect x="330" y="16" width="460" height="40" rx="8" fill="#141413"/>
+<text x="560" y="41" font-size="14" fill="#FDFCF9" text-anchor="middle">KENSE OS · DEPENDENCY &amp; CONTEXT MAP</text>
+<text x="560" y="72" font-size="10.8" fill="#7A756C" text-anchor="middle">one key in · capability supply · event feedback · shared kernel</text>
+<rect x="60" y="90" width="190" height="46" rx="7" fill="#141413"/>
+<text x="155" y="119" font-size="12" fill="#FDFCF9" text-anchor="middle">Clients · One key</text>
+<path d="M250 113 L292 113" fill="none" stroke="#141413" stroke-width="1.1" marker-end="url(#aInk)"/>
+<rect x="296" y="90" width="300" height="46" rx="7" fill="#141413"/>
+<text x="446" y="119" font-size="12" fill="#FDFCF9" text-anchor="middle">Unified Gateway · PEP</text>
+<path d="M596 113 L616 113" fill="none" stroke="#7A756C" stroke-width="1" stroke-dasharray="3 3" marker-end="url(#aNote)"/>
+<rect x="616" y="90" width="444" height="46" rx="7" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="838" y="109" font-size="10.6" fill="#141413" text-anchor="middle">forward-auth · local policy snapshot</text>
+<text x="838" y="126" font-size="10.6" fill="#7A756C" text-anchor="middle">URN-generated routes · async metering</text>
+<rect x="40" y="170" width="1040" height="140" rx="10" fill="none" stroke="#141413" stroke-width="0.9" stroke-dasharray="3 5"/>
+<text x="56" y="188" font-size="10.6" fill="#7A756C" text-anchor="start">SERVICE LAYERS · capability supply (not call dependency)  →</text>
+<path d="M446 136 L446 196 M130 196 L990 196" fill="none" stroke="#141413" stroke-width="1"/>
+<rect x="56" y="212" width="148" height="76" rx="7" fill="#141413"/>
+<text x="130" y="245" font-size="13" fill="#FDFCF9" text-anchor="middle">IaaS</text>
+<text x="130" y="266" font-size="10.2" fill="#FDFCF9" text-anchor="middle">compute · quota</text>
+<path d="M130 196 L130 208" fill="none" stroke="#141413" stroke-width="1.1" marker-end="url(#aInk)"/>
+<path d="M204 250 L224 250" fill="none" stroke="#141413" stroke-width="1.1" marker-end="url(#aInk)"/>
+<rect x="228" y="212" width="148" height="76" rx="7" fill="#141413"/>
+<text x="302" y="245" font-size="13" fill="#FDFCF9" text-anchor="middle">MaaS</text>
+<text x="302" y="266" font-size="10.2" fill="#FDFCF9" text-anchor="middle">models · inference</text>
+<path d="M302 196 L302 208" fill="none" stroke="#141413" stroke-width="1.1" marker-end="url(#aInk)"/>
+<path d="M376 250 L396 250" fill="none" stroke="#141413" stroke-width="1.1" marker-end="url(#aInk)"/>
+<rect x="400" y="212" width="148" height="76" rx="7" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="474" y="245" font-size="13" fill="#141413" text-anchor="middle">TaaS</text>
+<text x="474" y="266" font-size="10.2" fill="#7A756C" text-anchor="middle">training · adapter</text>
+<path d="M474 196 L474 208" fill="none" stroke="#141413" stroke-width="1.1" marker-end="url(#aInk)"/>
+<path d="M548 250 L568 250" fill="none" stroke="#141413" stroke-width="1.1" marker-end="url(#aInk)"/>
+<rect x="572" y="212" width="148" height="76" rx="7" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="646" y="245" font-size="13" fill="#141413" text-anchor="middle">PaaS</text>
+<text x="646" y="266" font-size="10.2" fill="#7A756C" text-anchor="middle">builds · deploy</text>
+<path d="M646 196 L646 208" fill="none" stroke="#141413" stroke-width="1.1" marker-end="url(#aInk)"/>
+<path d="M720 250 L740 250" fill="none" stroke="#141413" stroke-width="1.1" marker-end="url(#aInk)"/>
+<rect x="744" y="212" width="148" height="76" rx="7" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="818" y="245" font-size="13" fill="#141413" text-anchor="middle">AaaS</text>
+<text x="818" y="266" font-size="10.2" fill="#7A756C" text-anchor="middle">actors · sandbox</text>
+<path d="M818 196 L818 208" fill="none" stroke="#141413" stroke-width="1.1" marker-end="url(#aInk)"/>
+<path d="M892 250 L912 250" fill="none" stroke="#141413" stroke-width="1.1" marker-end="url(#aInk)"/>
+<rect x="916" y="212" width="148" height="76" rx="7" fill="#FDFCF9" stroke="#C2795A" stroke-width="1.2"/>
+<text x="990" y="245" font-size="13" fill="#141413" text-anchor="middle">SaaS</text>
+<text x="990" y="266" font-size="10.2" fill="#7A756C" text-anchor="middle">results · tools</text>
+<path d="M990 196 L990 208" fill="none" stroke="#141413" stroke-width="1.1" marker-end="url(#aInk)"/>
+<path d="M818 288 L818 300 L474 300 L474 290" fill="none" stroke="#C2795A" stroke-width="1.4" stroke-dasharray="6 4" marker-end="url(#aClay)"/>
+<rect x="556" y="290" width="196" height="20" rx="3" fill="#F8F6F0"/>
+<text x="654" y="304" font-size="9.8" fill="#C2795A" text-anchor="middle">PRODUCTION TRACES → TaaS</text>
+<rect x="280" y="330" width="560" height="58" rx="8" fill="#141413"/>
+<text x="560" y="353" font-size="12" fill="#FDFCF9" text-anchor="middle">HETEROGENEOUS RESOURCE POOL</text>
+<text x="560" y="372" font-size="9.8" fill="#FDFCF9" text-anchor="middle">GPU · NPU · CPU · RDMA · object storage</text>
+<path d="M560 330 L560 312" fill="none" stroke="#141413" stroke-width="1.1" marker-end="url(#aInk)"/>
+<rect x="40" y="396" width="640" height="96" rx="10" fill="none" stroke="#141413" stroke-width="0.9" stroke-dasharray="3 5"/>
+<text x="56" y="414" font-size="10.4" fill="#7A756C" text-anchor="start">DEVELOPER SUPPLY CHAIN → MaaS / TaaS / PaaS / AaaS / SaaS</text>
+<rect x="56" y="422" width="180" height="54" rx="7" fill="#FDFCF9" stroke="#C2795A" stroke-width="1.1"/>
+<text x="146" y="444" font-size="12" fill="#141413" text-anchor="middle">Actions</text>
+<text x="146" y="462" font-size="10" fill="#C2795A" text-anchor="middle">workflow · runner</text>
+<path d="M236 449 L254 449" fill="none" stroke="#C2795A" stroke-width="1.1" marker-end="url(#aClay)"/>
+<rect x="258" y="422" width="180" height="54" rx="7" fill="#FDFCF9" stroke="#C2795A" stroke-width="1.1"/>
+<text x="348" y="444" font-size="12" fill="#141413" text-anchor="middle">Packages</text>
+<text x="348" y="462" font-size="10" fill="#C2795A" text-anchor="middle">immutable digest</text>
+<path d="M438 449 L456 449" fill="none" stroke="#C2795A" stroke-width="1.1" marker-end="url(#aClay)"/>
+<rect x="460" y="422" width="180" height="54" rx="7" fill="#FDFCF9" stroke="#C2795A" stroke-width="1.1"/>
+<text x="550" y="444" font-size="12" fill="#141413" text-anchor="middle">Releases</text>
+<text x="550" y="462" font-size="10" fill="#C2795A" text-anchor="middle">alias + weight</text>
+<rect x="700" y="396" width="380" height="96" rx="10" fill="#F7E9E0" stroke="#C2795A" stroke-width="1"/>
+<text x="890" y="416" font-size="10.8" fill="#C2795A" text-anchor="middle">EVENT FEEDBACK &amp; CONSISTENCY</text>
+<text x="890" y="437" font-size="10.2" fill="#141413" text-anchor="middle">all layers → meter + audit events</text>
+<text x="890" y="455" font-size="10.2" fill="#141413" text-anchor="middle">AaaS / SaaS → traces → new dataset → TaaS</text>
+<text x="890" y="474" font-size="10.2" fill="#7A756C" text-anchor="middle">Outbox · idempotency · Saga compensation</text>
+<rect x="40" y="508" width="1040" height="96" rx="10" fill="none" stroke="#141413" stroke-width="0.9" stroke-dasharray="3 5"/>
+<text x="56" y="526" font-size="10.6" fill="#7A756C" text-anchor="start">CROSS-CUTTING PLANES · shared kernel → all layers (owner: contracts/)</text>
+<rect x="56" y="536" width="180" height="52" rx="7" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="146" y="567" font-size="11.5" fill="#141413" text-anchor="middle">Identity</text>
+<path d="M146 536 L146 528" fill="none" stroke="#7A756C" stroke-width="0.9" stroke-dasharray="2 3" marker-end="url(#aNote)"/>
+<rect x="256" y="536" width="180" height="52" rx="7" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="346" y="567" font-size="11.5" fill="#141413" text-anchor="middle">URN Registry</text>
+<path d="M346 536 L346 528" fill="none" stroke="#7A756C" stroke-width="0.9" stroke-dasharray="2 3" marker-end="url(#aNote)"/>
+<rect x="456" y="536" width="180" height="52" rx="7" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="546" y="567" font-size="11.5" fill="#141413" text-anchor="middle">Metering</text>
+<path d="M546 536 L546 528" fill="none" stroke="#7A756C" stroke-width="0.9" stroke-dasharray="2 3" marker-end="url(#aNote)"/>
+<rect x="656" y="536" width="180" height="52" rx="7" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="746" y="567" font-size="11.5" fill="#141413" text-anchor="middle">Audit</text>
+<path d="M746 536 L746 528" fill="none" stroke="#7A756C" stroke-width="0.9" stroke-dasharray="2 3" marker-end="url(#aNote)"/>
+<rect x="856" y="536" width="180" height="52" rx="7" fill="#C2795A"/>
+<text x="946" y="567" font-size="11.5" fill="#FDFCF9" text-anchor="middle">Vault</text>
+<path d="M946 536 L946 528" fill="none" stroke="#7A756C" stroke-width="0.9" stroke-dasharray="2 3" marker-end="url(#aNote)"/>
+<path d="M40 562 L26 562 L26 250 L40 250" fill="none" stroke="#7A756C" stroke-width="1.1" stroke-dasharray="2 4" marker-end="url(#aNote)"/>
+<rect x="40" y="620" width="500" height="92" rx="10" fill="#FDFCF9" stroke="#DCD6C8" stroke-width="0.9"/>
+<text x="56" y="640" font-size="10.6" fill="#7A756C" text-anchor="start">EDGE SEMANTICS</text>
+<path d="M60 658 L110 658" fill="none" stroke="#141413" stroke-width="1.3" marker-end="url(#aInk)"/>
+<text x="190" y="662" font-size="10.2" fill="#141413" text-anchor="start">call / capability supply</text>
+<path d="M60 678 L110 678" fill="none" stroke="#C2795A" stroke-width="1.3" stroke-dasharray="6 4" marker-end="url(#aClay)"/>
+<text x="190" y="682" font-size="10.2" fill="#141413" text-anchor="start">event, metering &amp; feedback</text>
+<path d="M60 698 L110 698" fill="none" stroke="#7A756C" stroke-width="1.1" stroke-dasharray="2 3" marker-end="url(#aNote)"/>
+<text x="190" y="702" font-size="10.2" fill="#141413" text-anchor="start">shared kernel / credential injection</text>
+<rect x="560" y="620" width="520" height="92" rx="10" fill="#FDFCF9" stroke="#DCD6C8" stroke-width="0.9"/>
+<text x="576" y="640" font-size="10.6" fill="#7A756C" text-anchor="start">CONTEXT MAP (DDD)</text>
+<text x="576" y="660" font-size="10.2" fill="#141413" text-anchor="start">Shared kernel   5 planes · contracts/ owns the language</text>
+<text x="576" y="678" font-size="10.2" fill="#141413" text-anchor="start">OHS / PL        URN registry + generated clients</text>
+<text x="576" y="696" font-size="10.2" fill="#141413" text-anchor="start">ACL             gateway PEP · Customer-Supplier  supply → services</text>
+</g></svg>

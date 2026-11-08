@@ -16,6 +16,16 @@ The supply side feeds the product side: `IaaS → MaaS → TaaS → PaaS / AaaS 
 
 One credential, one chain. The primary key is presented once at the gateway and exchanged for a short-lived scoped credential; downstream services never see it and sandboxes hold none. Capabilities register as URNs before exposure, and every request emits one metered event, so identity, quota, budget, audit and billing share a single chain.
 
+## Dependencies & context map
+
+![Kense OS dependency and context map — gateway fan-out, capability supply, cross-cutting shared kernel, developer supply chain, resource pool and the production-trace feedback loop](docs/kense-os-context-map.png)
+
+[Vector source](docs/kense-os-context-map.svg)
+
+Three edge types: solid ink for calls and capability supply, dashed clay for events, metering and feedback, dotted grey for the shared kernel and credential injection. The orange loop closes the chain that individual module diagrams leave open — production traces from AaaS / SaaS return as a new dataset and benchmark for TaaS. Metering and audit events flow from every layer, so no event source is left dangling.
+
+In DDD terms the five planes are a shared kernel owned by `contracts/`; the URN registry is an Open Host Service whose Published Language is the generated clients; the gateway is the Anti-Corruption Layer at the edge; the supply chain is a Customer-Supplier of the service layers; the resource pool is Conformist to the control plane's placement declarations.
+
 ## Module architecture
 
 Vector sources for every diagram live in [`docs/modules/svg/`](docs/modules/svg/).

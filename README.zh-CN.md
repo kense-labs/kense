@@ -16,6 +16,16 @@ Kense 是 AI 工作负载的供给与治理平面，不是 AI 应用开发框架
 
 一把 Key，一条链。主 Key 只在网关出示一次并换成短时限域凭据；下游服务看不到它，沙箱不持有任何凭据。能力在暴露前先注册为 URN，每次请求产生唯一计量事件，因此身份、配额、预算、审计与账单共用一条链。
 
+## 依赖关系与上下文映射
+
+![Kense OS 依赖与上下文映射 — 网关分发、能力供给、横切共享内核、开发者供应链、资源池与生产轨迹回流闭环](docs/kense-os-context-map.png)
+
+[矢量源文件](docs/kense-os-context-map.svg)
+
+三种边语义：墨黑实线表示调用与能力供给，陶土橙虚线表示事件、计量与反馈，灰色点线表示共享内核与凭据注入。橙色回流闭环补上了单张模块图里断开的那一段——AaaS / SaaS 的生产轨迹回流成新数据集与新 Benchmark 交给 TaaS；各层的计量与审计事件汇入 Metering / Audit，因此不再有悬空的事件源。
+
+按 DDD 的语境：五个横切平面是由 `contracts/` 拥有的共享内核（Shared Kernel）；URN 目录是对外开放服务（Open Host Service），其 Published Language 就是生成的客户端；网关是边缘的防腐层（ACL）；供应链是服务层的客户—供应方（Customer-Supplier）；资源池对控制面的放置声明是遵从者（Conformist）。
+
 ## 模块架构
 
 每张图的矢量源文件在 [`docs/modules/svg/`](docs/modules/svg/)。
