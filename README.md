@@ -180,6 +180,7 @@ The heterogeneous compute substrate: NVIDIA, AMD, Ascend, PPU, Hygon, Apple and 
 - **Find the source** — public repositories are listed below; the backend source migrated out of aster lives in [`platform/`](platform/).
 - **Read the contract** — the architecture diagram above is the canonical shape of the system.
 - **Read the design review** — architecture analysis and project naming plan in [`docs/naming/`](docs/naming/).
+- **Read the diagram style** — block and line conventions, including dashed cross-cutting blocks, in [`docs/diagram-style.md`](docs/diagram-style.md).
 
 ## Repositories
 
