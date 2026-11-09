@@ -4,9 +4,9 @@
 <desc>One key at the centre radiates through seven hubs into leaf capabilities, with a horizontal gateway trunk on the right ending in a second hub that fans out to LLM, API, MCP and A2A. All branches use kense accent blue.</desc>
 <rect x="0" y="0" width="1120" height="680" rx="14" fill="#F8F6F0"/>
 <g font-family="Menlo, SFMono-Regular, Consolas, monospace">
-<path d="M40 40 L1080 40" fill="none" stroke="#DCD6C8" stroke-width="0.6" stroke-linecap="round"/>
-<path d="M40 620 L1080 620" fill="none" stroke="#DCD6C8" stroke-width="0.6" stroke-linecap="round"/>
-<text x="40.0" y="30.0" font-size="12" fill="#7A756C" text-anchor="start" dominant-baseline="central" font-weight="500">KENSE OS  ·  CAPABILITY RADIATION</text>
+<path d="M40 40 L1080 40" fill="none" stroke="#DCD6C8" stroke-width="0.9" stroke-linecap="round"/>
+<path d="M40 620 L1080 620" fill="none" stroke="#DCD6C8" stroke-width="0.9" stroke-linecap="round"/>
+<text x="40.0" y="30.0" font-size="12.5" fill="#7A756C" text-anchor="start" dominant-baseline="central" font-weight="500">KENSE OS  ·  CAPABILITY RADIATION</text>
 <text x="1080.0" y="30.0" font-size="11" fill="#7A756C" text-anchor="end" dominant-baseline="central">one key → every capability</text>
 <path d="M360 330 Q289.2 239.9 200 168" fill="none" stroke="#141413" stroke-width="1.2" stroke-linecap="round"/>
 <path d="M360 330 Q374.0 239.5 370 148" fill="none" stroke="#141413" stroke-width="1.2" stroke-linecap="round"/>
@@ -16,121 +16,121 @@
 <path d="M360 330 Q356.0 421.5 370 512" fill="none" stroke="#141413" stroke-width="1.2" stroke-linecap="round"/>
 <path d="M360 330 Q446.0 414.2 548 478" fill="none" stroke="#141413" stroke-width="1.2" stroke-linecap="round"/>
 <path d="M360 330 L620 330" fill="none" stroke="#141413" stroke-width="1.2" stroke-linecap="round"/>
-<path d="M620 330 L830 330" fill="none" stroke="#141413" stroke-width="1.0" stroke-linecap="round" stroke-dasharray="4 4"/>
+<path d="M620 330 L830 330" fill="none" stroke="#141413" stroke-width="1.2" stroke-linecap="round" stroke-dasharray="4 4"/>
 <path d="M830 330 L980 330" fill="none" stroke="#141413" stroke-width="1.2" stroke-linecap="round"/>
-<rect x="616.0" y="326.0" width="8" height="8" rx="1" fill="#FDFCF9" stroke="#141413" stroke-width="1"/>
-<rect x="827.0" y="327.0" width="6" height="6" rx="1" fill="#4E60FF" stroke="#4E60FF" stroke-width="1"/>
-<text x="620.0" y="314.0" font-size="11.5" fill="#4E60FF" text-anchor="middle" dominant-baseline="central" font-weight="500">GATEWAY</text>
+<rect x="616.0" y="326.0" width="8" height="8" rx="2" fill="#FDFCF9" stroke="#141413" stroke-width="1.2"/>
+<rect x="827.0" y="327.0" width="6" height="6" rx="2" fill="#4E60FF" stroke="#4E60FF" stroke-width="1.2"/>
+<text x="620.0" y="314.0" font-size="11" fill="#4E60FF" text-anchor="middle" dominant-baseline="central" font-weight="500">GATEWAY</text>
 <text x="725.0" y="316.0" font-size="10.5" fill="#7A756C" text-anchor="middle" dominant-baseline="central">policy snapshot</text>
 <circle cx="980.0" cy="330.0" r="7" fill="#4E60FF"/>
-<text x="980.0" y="352.0" font-size="11.5" fill="#4E60FF" text-anchor="middle" dominant-baseline="central" font-weight="500">ROUTING</text>
+<text x="980.0" y="352.0" font-size="11" fill="#4E60FF" text-anchor="middle" dominant-baseline="central" font-weight="500">ROUTING</text>
 <circle cx="200.0" cy="168.0" r="6.5" fill="#4E60FF"/>
-<rect x="188.5" y="174.5" width="67.2" height="18" rx="3" fill="#F8F6F0"/>
-<text x="222.1" y="183.5" font-size="11.5" fill="#4E60FF" text-anchor="middle" dominant-baseline="central" font-weight="500">IDENTITY</text>
-<path d="M200.0 168.0 C168.1 168.0, 155.9 166.7, 124.0 166.7" fill="none" stroke="#4E60FF" stroke-width="1.0" stroke-linecap="round"/>
+<rect x="188.5" y="174.5" width="67.2" height="18" rx="2" fill="#F8F6F0"/>
+<text x="222.1" y="183.5" font-size="11" fill="#4E60FF" text-anchor="middle" dominant-baseline="central" font-weight="500">IDENTITY</text>
+<path d="M200.0 168.0 C168.1 168.0, 155.9 166.7, 124.0 166.7" fill="none" stroke="#4E60FF" stroke-width="1.2" stroke-linecap="round"/>
 <circle cx="124.0" cy="166.7" r="2.4" fill="#4E60FF"/>
 <text x="115.0" y="166.5" font-size="11" fill="#141413" text-anchor="end" dominant-baseline="central">scope</text>
-<path d="M200.0 168.0 C173.9 168.0, 163.9 124.4, 137.7 124.4" fill="none" stroke="#4E60FF" stroke-width="1.0" stroke-linecap="round"/>
+<path d="M200.0 168.0 C173.9 168.0, 163.9 124.4, 137.7 124.4" fill="none" stroke="#4E60FF" stroke-width="1.2" stroke-linecap="round"/>
 <circle cx="137.7" cy="124.4" r="2.4" fill="#4E60FF"/>
 <text x="130.4" y="119.8" font-size="11" fill="#141413" text-anchor="end" dominant-baseline="central">exchange</text>
-<path d="M200.0 168.0 C188.6 168.0, 184.2 97.0, 172.8 97.0" fill="none" stroke="#4E60FF" stroke-width="1.0" stroke-linecap="round"/>
+<path d="M200.0 168.0 C188.6 168.0, 184.2 97.0, 172.8 97.0" fill="none" stroke="#4E60FF" stroke-width="1.2" stroke-linecap="round"/>
 <circle cx="172.8" cy="97.0" r="2.4" fill="#4E60FF"/>
 <text x="169.5" y="89.6" font-size="11" fill="#141413" text-anchor="end" dominant-baseline="central">delegation</text>
 <circle cx="370.0" cy="148.0" r="6.5" fill="#4E60FF"/>
-<rect x="339.9" y="166.0" width="60.3" height="18" rx="3" fill="#F8F6F0"/>
-<text x="370.0" y="175.0" font-size="11.5" fill="#4E60FF" text-anchor="middle" dominant-baseline="central" font-weight="500">CATALOG</text>
-<path d="M370.0 148.0 C352.2 148.0, 345.4 85.0, 327.5 85.0" fill="none" stroke="#4E60FF" stroke-width="1.0" stroke-linecap="round"/>
+<rect x="339.9" y="166.0" width="60.3" height="18" rx="2" fill="#F8F6F0"/>
+<text x="370.0" y="175.0" font-size="11" fill="#4E60FF" text-anchor="middle" dominant-baseline="central" font-weight="500">CATALOG</text>
+<path d="M370.0 148.0 C352.2 148.0, 345.4 85.0, 327.5 85.0" fill="none" stroke="#4E60FF" stroke-width="1.2" stroke-linecap="round"/>
 <circle cx="327.5" cy="85.0" r="2.4" fill="#4E60FF"/>
 <text x="322.5" y="78.4" font-size="11" fill="#141413" text-anchor="end" dominant-baseline="central">URN</text>
-<path d="M370.0 148.0 C370.0 148.0, 370.0 72.0, 370.0 72.0" fill="none" stroke="#4E60FF" stroke-width="1.0" stroke-linecap="round"/>
+<path d="M370.0 148.0 C370.0 148.0, 370.0 72.0, 370.0 72.0" fill="none" stroke="#4E60FF" stroke-width="1.2" stroke-linecap="round"/>
 <circle cx="370.0" cy="72.0" r="2.4" fill="#4E60FF"/>
 <text x="370.0" y="64.0" font-size="11" fill="#141413" text-anchor="middle" dominant-baseline="central">contracts</text>
-<path d="M370.0 148.0 C387.8 148.0, 394.6 85.0, 412.5 85.0" fill="none" stroke="#4E60FF" stroke-width="1.0" stroke-linecap="round"/>
+<path d="M370.0 148.0 C387.8 148.0, 394.6 85.0, 412.5 85.0" fill="none" stroke="#4E60FF" stroke-width="1.2" stroke-linecap="round"/>
 <circle cx="412.5" cy="85.0" r="2.4" fill="#4E60FF"/>
 <text x="417.5" y="78.4" font-size="11" fill="#141413" text-anchor="start" dominant-baseline="central">SDK</text>
 <circle cx="548.0" cy="182.0" r="6.5" fill="#4E60FF"/>
-<rect x="495.3" y="192.1" width="67.2" height="18" rx="3" fill="#F8F6F0"/>
-<text x="528.9" y="201.1" font-size="11.5" fill="#4E60FF" text-anchor="middle" dominant-baseline="central" font-weight="500">METERING</text>
-<path d="M548.0 182.0 C554.1 182.0, 556.4 107.4, 562.5 107.4" fill="none" stroke="#4E60FF" stroke-width="1.0" stroke-linecap="round"/>
+<rect x="495.3" y="192.1" width="67.2" height="18" rx="2" fill="#F8F6F0"/>
+<text x="528.9" y="201.1" font-size="11" fill="#4E60FF" text-anchor="middle" dominant-baseline="central" font-weight="500">METERING</text>
+<path d="M548.0 182.0 C554.1 182.0, 556.4 107.4, 562.5 107.4" fill="none" stroke="#4E60FF" stroke-width="1.2" stroke-linecap="round"/>
 <circle cx="562.5" cy="107.4" r="2.4" fill="#4E60FF"/>
 <text x="564.2" y="99.5" font-size="11" fill="#141413" text-anchor="middle" dominant-baseline="central">meter event</text>
-<path d="M548.0 182.0 C570.6 182.0, 579.2 128.3, 601.7 128.3" fill="none" stroke="#4E60FF" stroke-width="1.0" stroke-linecap="round"/>
+<path d="M548.0 182.0 C570.6 182.0, 579.2 128.3, 601.7 128.3" fill="none" stroke="#4E60FF" stroke-width="1.2" stroke-linecap="round"/>
 <circle cx="601.7" cy="128.3" r="2.4" fill="#4E60FF"/>
 <text x="608.1" y="122.6" font-size="11" fill="#141413" text-anchor="start" dominant-baseline="central">credit</text>
-<path d="M548.0 182.0 C579.3 182.0, 591.3 167.5, 622.6 167.5" fill="none" stroke="#4E60FF" stroke-width="1.0" stroke-linecap="round"/>
+<path d="M548.0 182.0 C579.3 182.0, 591.3 167.5, 622.6 167.5" fill="none" stroke="#4E60FF" stroke-width="1.2" stroke-linecap="round"/>
 <circle cx="622.6" cy="167.5" r="2.4" fill="#4E60FF"/>
 <text x="631.4" y="166.0" font-size="11" fill="#141413" text-anchor="start" dominant-baseline="central">reservation</text>
 <circle cx="180.0" cy="330.0" r="6.5" fill="#4E60FF"/>
-<rect x="146.4" y="299.0" width="67.2" height="18" rx="3" fill="#F8F6F0"/>
-<text x="180.0" y="308.0" font-size="11.5" fill="#4E60FF" text-anchor="middle" dominant-baseline="central" font-weight="500">DELIVERY</text>
-<path d="M180.0 330.0 C153.5 330.0, 143.5 372.5, 117.0 372.5" fill="none" stroke="#4E60FF" stroke-width="1.0" stroke-linecap="round"/>
+<rect x="146.4" y="299.0" width="67.2" height="18" rx="2" fill="#F8F6F0"/>
+<text x="180.0" y="308.0" font-size="11" fill="#4E60FF" text-anchor="middle" dominant-baseline="central" font-weight="500">DELIVERY</text>
+<path d="M180.0 330.0 C153.5 330.0, 143.5 372.5, 117.0 372.5" fill="none" stroke="#4E60FF" stroke-width="1.2" stroke-linecap="round"/>
 <circle cx="117.0" cy="372.5" r="2.4" fill="#4E60FF"/>
 <text x="109.5" y="377.0" font-size="11" fill="#141413" text-anchor="end" dominant-baseline="central">Actions</text>
-<path d="M180.0 330.0 C148.1 330.0, 135.9 330.0, 104.0 330.0" fill="none" stroke="#4E60FF" stroke-width="1.0" stroke-linecap="round"/>
+<path d="M180.0 330.0 C148.1 330.0, 135.9 330.0, 104.0 330.0" fill="none" stroke="#4E60FF" stroke-width="1.2" stroke-linecap="round"/>
 <circle cx="104.0" cy="330.0" r="2.4" fill="#4E60FF"/>
 <text x="95.0" y="330.0" font-size="11" fill="#141413" text-anchor="end" dominant-baseline="central">Packages</text>
-<path d="M180.0 330.0 C153.5 330.0, 143.5 287.5, 117.0 287.5" fill="none" stroke="#4E60FF" stroke-width="1.0" stroke-linecap="round"/>
+<path d="M180.0 330.0 C153.5 330.0, 143.5 287.5, 117.0 287.5" fill="none" stroke="#4E60FF" stroke-width="1.2" stroke-linecap="round"/>
 <circle cx="117.0" cy="287.5" r="2.4" fill="#4E60FF"/>
 <text x="109.5" y="283.0" font-size="11" fill="#141413" text-anchor="end" dominant-baseline="central">Releases</text>
 <circle cx="200.0" cy="492.0" r="6.5" fill="#4E60FF"/>
-<rect x="174.7" y="467.5" width="94.8" height="18" rx="3" fill="#F8F6F0"/>
-<text x="222.1" y="476.5" font-size="11.5" fill="#4E60FF" text-anchor="middle" dominant-baseline="central" font-weight="500">MODEL SUPPLY</text>
-<path d="M200.0 492.0 C188.6 492.0, 184.2 563.0, 172.8 563.0" fill="none" stroke="#4E60FF" stroke-width="1.0" stroke-linecap="round"/>
+<rect x="174.7" y="467.5" width="94.8" height="18" rx="2" fill="#F8F6F0"/>
+<text x="222.1" y="476.5" font-size="11" fill="#4E60FF" text-anchor="middle" dominant-baseline="central" font-weight="500">MODEL SUPPLY</text>
+<path d="M200.0 492.0 C188.6 492.0, 184.2 563.0, 172.8 563.0" fill="none" stroke="#4E60FF" stroke-width="1.2" stroke-linecap="round"/>
 <circle cx="172.8" cy="563.0" r="2.4" fill="#4E60FF"/>
 <text x="169.5" y="570.4" font-size="11" fill="#141413" text-anchor="end" dominant-baseline="central">placement</text>
-<path d="M200.0 492.0 C173.9 492.0, 163.9 535.6, 137.7 535.6" fill="none" stroke="#4E60FF" stroke-width="1.0" stroke-linecap="round"/>
+<path d="M200.0 492.0 C173.9 492.0, 163.9 535.6, 137.7 535.6" fill="none" stroke="#4E60FF" stroke-width="1.2" stroke-linecap="round"/>
 <circle cx="137.7" cy="535.6" r="2.4" fill="#4E60FF"/>
 <text x="130.4" y="540.2" font-size="11" fill="#141413" text-anchor="end" dominant-baseline="central">inference</text>
-<path d="M200.0 492.0 C168.1 492.0, 155.9 493.3, 124.0 493.3" fill="none" stroke="#4E60FF" stroke-width="1.0" stroke-linecap="round"/>
+<path d="M200.0 492.0 C168.1 492.0, 155.9 493.3, 124.0 493.3" fill="none" stroke="#4E60FF" stroke-width="1.2" stroke-linecap="round"/>
 <circle cx="124.0" cy="493.3" r="2.4" fill="#4E60FF"/>
 <text x="115.0" y="493.5" font-size="11" fill="#141413" text-anchor="end" dominant-baseline="central">pool</text>
 <circle cx="370.0" cy="512.0" r="6.5" fill="#4E60FF"/>
-<rect x="346.8" y="476.0" width="46.5" height="18" rx="3" fill="#F8F6F0"/>
-<text x="370.0" y="485.0" font-size="11.5" fill="#4E60FF" text-anchor="middle" dominant-baseline="central" font-weight="500">VAULT</text>
-<path d="M370.0 512.0 C386.0 512.0, 392.1 568.4, 408.0 568.4" fill="none" stroke="#4E60FF" stroke-width="1.0" stroke-linecap="round"/>
+<rect x="346.8" y="476.0" width="46.5" height="18" rx="2" fill="#F8F6F0"/>
+<text x="370.0" y="485.0" font-size="11" fill="#4E60FF" text-anchor="middle" dominant-baseline="central" font-weight="500">VAULT</text>
+<path d="M370.0 512.0 C386.0 512.0, 392.1 568.4, 408.0 568.4" fill="none" stroke="#4E60FF" stroke-width="1.2" stroke-linecap="round"/>
 <circle cx="408.0" cy="568.4" r="2.4" fill="#4E60FF"/>
 <text x="413.1" y="575.0" font-size="11" fill="#141413" text-anchor="start" dominant-baseline="central">sealed</text>
-<path d="M370.0 512.0 C370.0 512.0, 370.0 580.0, 370.0 580.0" fill="none" stroke="#4E60FF" stroke-width="1.0" stroke-linecap="round"/>
+<path d="M370.0 512.0 C370.0 512.0, 370.0 580.0, 370.0 580.0" fill="none" stroke="#4E60FF" stroke-width="1.2" stroke-linecap="round"/>
 <circle cx="370.0" cy="580.0" r="2.4" fill="#4E60FF"/>
 <text x="370.0" y="588.0" font-size="11" fill="#141413" text-anchor="middle" dominant-baseline="central">active</text>
-<path d="M370.0 512.0 C354.0 512.0, 347.9 568.4, 332.0 568.4" fill="none" stroke="#4E60FF" stroke-width="1.0" stroke-linecap="round"/>
+<path d="M370.0 512.0 C354.0 512.0, 347.9 568.4, 332.0 568.4" fill="none" stroke="#4E60FF" stroke-width="1.2" stroke-linecap="round"/>
 <circle cx="332.0" cy="568.4" r="2.4" fill="#4E60FF"/>
 <text x="326.9" y="575.0" font-size="11" fill="#141413" text-anchor="end" dominant-baseline="central">revoked</text>
 <circle cx="548.0" cy="478.0" r="6.5" fill="#4E60FF"/>
-<rect x="505.7" y="449.9" width="46.5" height="18" rx="3" fill="#F8F6F0"/>
-<text x="528.9" y="458.9" font-size="11.5" fill="#4E60FF" text-anchor="middle" dominant-baseline="central" font-weight="500">AUDIT</text>
-<path d="M548.0 478.0 C579.3 478.0, 591.3 492.5, 622.6 492.5" fill="none" stroke="#4E60FF" stroke-width="1.0" stroke-linecap="round"/>
+<rect x="505.7" y="449.9" width="46.5" height="18" rx="2" fill="#F8F6F0"/>
+<text x="528.9" y="458.9" font-size="11" fill="#4E60FF" text-anchor="middle" dominant-baseline="central" font-weight="500">AUDIT</text>
+<path d="M548.0 478.0 C579.3 478.0, 591.3 492.5, 622.6 492.5" fill="none" stroke="#4E60FF" stroke-width="1.2" stroke-linecap="round"/>
 <circle cx="622.6" cy="492.5" r="2.4" fill="#4E60FF"/>
 <text x="631.4" y="494.0" font-size="11" fill="#141413" text-anchor="start" dominant-baseline="central">hash chain</text>
-<path d="M548.0 478.0 C570.6 478.0, 579.2 531.7, 601.7 531.7" fill="none" stroke="#4E60FF" stroke-width="1.0" stroke-linecap="round"/>
+<path d="M548.0 478.0 C570.6 478.0, 579.2 531.7, 601.7 531.7" fill="none" stroke="#4E60FF" stroke-width="1.2" stroke-linecap="round"/>
 <circle cx="601.7" cy="531.7" r="2.4" fill="#4E60FF"/>
 <text x="608.1" y="537.4" font-size="11" fill="#141413" text-anchor="start" dominant-baseline="central">anchor</text>
-<path d="M548.0 478.0 C554.1 478.0, 556.4 552.6, 562.5 552.6" fill="none" stroke="#4E60FF" stroke-width="1.0" stroke-linecap="round"/>
+<path d="M548.0 478.0 C554.1 478.0, 556.4 552.6, 562.5 552.6" fill="none" stroke="#4E60FF" stroke-width="1.2" stroke-linecap="round"/>
 <circle cx="562.5" cy="552.6" r="2.4" fill="#4E60FF"/>
 <text x="564.2" y="560.5" font-size="11" fill="#141413" text-anchor="middle" dominant-baseline="central">events</text>
-<path d="M980.0 330.0 C1010.4 330.0, 1022.0 273.4, 1052.5 273.4" fill="none" stroke="#4E60FF" stroke-width="1.0" stroke-linecap="round"/>
+<path d="M980.0 330.0 C1010.4 330.0, 1022.0 273.4, 1052.5 273.4" fill="none" stroke="#4E60FF" stroke-width="1.2" stroke-linecap="round"/>
 <circle cx="1052.5" cy="273.4" r="2.4" fill="#4E60FF"/>
 <text x="1059.6" y="268.4" font-size="11" fill="#141413" text-anchor="start" dominant-baseline="central">LLM</text>
-<path d="M980.0 330.0 C1017.6 330.0, 1032.0 309.3, 1069.6 309.3" fill="none" stroke="#4E60FF" stroke-width="1.0" stroke-linecap="round"/>
+<path d="M980.0 330.0 C1017.6 330.0, 1032.0 309.3, 1069.6 309.3" fill="none" stroke="#4E60FF" stroke-width="1.2" stroke-linecap="round"/>
 <circle cx="1069.6" cy="309.3" r="2.4" fill="#4E60FF"/>
 <text x="1078.4" y="307.5" font-size="11" fill="#141413" text-anchor="start" dominant-baseline="central">API</text>
-<path d="M980.0 330.0 C1017.6 330.0, 1032.0 350.7, 1069.6 350.7" fill="none" stroke="#4E60FF" stroke-width="1.0" stroke-linecap="round"/>
+<path d="M980.0 330.0 C1017.6 330.0, 1032.0 350.7, 1069.6 350.7" fill="none" stroke="#4E60FF" stroke-width="1.2" stroke-linecap="round"/>
 <circle cx="1069.6" cy="350.7" r="2.4" fill="#4E60FF"/>
 <text x="1078.4" y="352.5" font-size="11" fill="#141413" text-anchor="start" dominant-baseline="central">MCP</text>
-<path d="M980.0 330.0 C1010.4 330.0, 1022.0 386.6, 1052.5 386.6" fill="none" stroke="#4E60FF" stroke-width="1.0" stroke-linecap="round"/>
+<path d="M980.0 330.0 C1010.4 330.0, 1022.0 386.6, 1052.5 386.6" fill="none" stroke="#4E60FF" stroke-width="1.2" stroke-linecap="round"/>
 <circle cx="1052.5" cy="386.6" r="2.4" fill="#4E60FF"/>
 <text x="1059.6" y="391.6" font-size="11" fill="#141413" text-anchor="start" dominant-baseline="central">A2A</text>
 <circle cx="360.0" cy="330.0" r="23" fill="#4E60FF"/>
 <text x="360.0" y="330.0" font-size="11" fill="#FDFCF9" text-anchor="middle" dominant-baseline="central" font-weight="500">ONE KEY</text>
 <text x="360.0" y="370.0" font-size="10.5" fill="#7A756C" text-anchor="middle" dominant-baseline="central">identity · quota · audit · billing</text>
-<path d="M40 620 L1080 620" fill="none" stroke="#DCD6C8" stroke-width="0.6" stroke-linecap="round"/>
+<path d="M40 620 L1080 620" fill="none" stroke="#DCD6C8" stroke-width="0.9" stroke-linecap="round"/>
 <circle cx="52.0" cy="640.0" r="3" fill="#4E60FF"/>
 <text x="62.0" y="640.0" font-size="10.5" fill="#7A756C" text-anchor="start" dominant-baseline="central">capability leaf</text>
-<path d="M190 640 Q202 632 214 640" fill="none" stroke="#4E60FF" stroke-width="1.0" stroke-linecap="round"/>
+<path d="M190 640 Q202 632 214 640" fill="none" stroke="#4E60FF" stroke-width="1.2" stroke-linecap="round"/>
 <text x="222.0" y="640.0" font-size="10.5" fill="#7A756C" text-anchor="start" dominant-baseline="central">blue curved branch</text>
 <path d="M380 640 L404 640" fill="none" stroke="#141413" stroke-width="1.2" stroke-linecap="round"/>
 <text x="412.0" y="640.0" font-size="10.5" fill="#7A756C" text-anchor="start" dominant-baseline="central">ink trunk</text>
-<rect x="505.0" y="637.0" width="6" height="6" rx="1" fill="#FDFCF9" stroke="#141413" stroke-width="1"/>
+<rect x="505.0" y="637.0" width="6" height="6" rx="2" fill="#FDFCF9" stroke="#141413" stroke-width="1.2"/>
 <text x="520.0" y="640.0" font-size="10.5" fill="#7A756C" text-anchor="start" dominant-baseline="central">relay</text>
 <text x="1080.0" y="640.0" font-size="10.5" fill="#7A756C" text-anchor="end" dominant-baseline="central">radiating tree ≠ dependency graph</text>
 </g></svg>

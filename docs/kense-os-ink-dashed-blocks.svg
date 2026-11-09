@@ -4,45 +4,45 @@
 <desc>Nine black dashed-outline blocks in three groups: the contracts single source of truth, CI-enforced gates, and architectural invariants. Ink dashed blocks denote authoritative but non-deployable rules, distinct from blue dashed blocks which denote active cross-cutting concerns.</desc>
 <rect x="0" y="0" width="680" height="490" rx="14" fill="#F8F6F0"/>
 <g font-family="Menlo, SFMono-Regular, Consolas, monospace">
-<text x="30" y="26" font-size="13" fill="#141413" text-anchor="start" font-weight="500">CONTRACTS, GATES &amp; INVARIANTS  ·  ink dashed blocks</text>
+<text x="30" y="26" font-size="12.5" fill="#141413" text-anchor="start" font-weight="500">CONTRACTS, GATES &amp; INVARIANTS  ·  ink dashed blocks</text>
 <text x="30" y="44" font-size="11" fill="#7A756C" text-anchor="start">ink dashed = authoritative rules, not deployable services; neutral, no accent colour</text>
-<rect x="30" y="56" width="620" height="106" rx="10" fill="none" stroke="#141413" stroke-width="0.9" stroke-dasharray="3 5" opacity="0.4"/>
+<rect x="30" y="56" width="620" height="106" rx="8" fill="none" stroke="#141413" stroke-width="0.9" stroke-dasharray="3 5" opacity="0.4"/>
 <text x="44" y="76" font-size="11" fill="#141413" text-anchor="start" font-weight="500">CONTRACTS  ·  single source of truth</text>
 <rect x="44" y="86" width="186" height="62" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="1.2" stroke-dasharray="4 4"/>
-<text x="137" y="112" font-size="11.5" fill="#141413" text-anchor="middle" font-weight="500">contracts/</text>
+<text x="137" y="112" font-size="11" fill="#141413" text-anchor="middle" font-weight="500">contracts/</text>
 <text x="137" y="132" font-size="11" fill="#7A756C" text-anchor="middle">URN · OpenAPI · errors</text>
 <rect x="247" y="86" width="186" height="62" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="1.2" stroke-dasharray="4 4"/>
-<text x="340" y="112" font-size="11.5" fill="#141413" text-anchor="middle" font-weight="500">*_SCHEMA_V1</text>
+<text x="340" y="112" font-size="11" fill="#141413" text-anchor="middle" font-weight="500">*_SCHEMA_V1</text>
 <text x="340" y="132" font-size="11" fill="#7A756C" text-anchor="middle">versioned DTOs</text>
 <rect x="450" y="86" width="186" height="62" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="1.2" stroke-dasharray="4 4"/>
-<text x="543" y="112" font-size="11.5" fill="#141413" text-anchor="middle" font-weight="500">cloud-sdk</text>
+<text x="543" y="112" font-size="11" fill="#141413" text-anchor="middle" font-weight="500">cloud-sdk</text>
 <text x="543" y="132" font-size="11" fill="#7A756C" text-anchor="middle">generated clients</text>
-<rect x="30" y="174" width="620" height="106" rx="10" fill="none" stroke="#141413" stroke-width="0.9" stroke-dasharray="3 5" opacity="0.4"/>
+<rect x="30" y="174" width="620" height="106" rx="8" fill="none" stroke="#141413" stroke-width="0.9" stroke-dasharray="3 5" opacity="0.4"/>
 <text x="44" y="194" font-size="11" fill="#141413" text-anchor="start" font-weight="500">GATES  ·  CI-enforced</text>
 <rect x="44" y="204" width="186" height="62" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="1.2" stroke-dasharray="4 4"/>
-<text x="137" y="230" font-size="11.5" fill="#141413" text-anchor="middle" font-weight="500">OpenAPI snapshot</text>
+<text x="137" y="230" font-size="11" fill="#141413" text-anchor="middle" font-weight="500">OpenAPI snapshot</text>
 <text x="137" y="250" font-size="11" fill="#7A756C" text-anchor="middle">drift = fail</text>
 <rect x="247" y="204" width="186" height="62" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="1.2" stroke-dasharray="4 4"/>
-<text x="340" y="230" font-size="11.5" fill="#141413" text-anchor="middle" font-weight="500">CODE &lt;-&gt; i18n</text>
+<text x="340" y="230" font-size="11" fill="#141413" text-anchor="middle" font-weight="500">CODE &lt;-&gt; i18n</text>
 <text x="340" y="250" font-size="11" fill="#7A756C" text-anchor="middle">one-to-one</text>
 <rect x="450" y="204" width="186" height="62" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="1.2" stroke-dasharray="4 4"/>
-<text x="543" y="230" font-size="11.5" fill="#141413" text-anchor="middle" font-weight="500">brand literal</text>
+<text x="543" y="230" font-size="11" fill="#141413" text-anchor="middle" font-weight="500">brand literal</text>
 <text x="543" y="250" font-size="11" fill="#7A756C" text-anchor="middle">brand.toml only</text>
-<rect x="30" y="292" width="620" height="106" rx="10" fill="none" stroke="#141413" stroke-width="0.9" stroke-dasharray="3 5" opacity="0.4"/>
+<rect x="30" y="292" width="620" height="106" rx="8" fill="none" stroke="#141413" stroke-width="0.9" stroke-dasharray="3 5" opacity="0.4"/>
 <text x="44" y="312" font-size="11" fill="#141413" text-anchor="start" font-weight="500">INVARIANTS  ·  must not break</text>
 <rect x="44" y="322" width="186" height="62" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="1.2" stroke-dasharray="4 4"/>
-<text x="137" y="348" font-size="11.5" fill="#141413" text-anchor="middle" font-weight="500">Release primitive</text>
+<text x="137" y="348" font-size="11" fill="#141413" text-anchor="middle" font-weight="500">Release primitive</text>
 <text x="137" y="368" font-size="11" fill="#7A756C" text-anchor="middle">version · alias · weight</text>
 <rect x="247" y="322" width="186" height="62" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="1.2" stroke-dasharray="4 4"/>
-<text x="340" y="348" font-size="11.5" fill="#141413" text-anchor="middle" font-weight="500">Metering ownership</text>
+<text x="340" y="348" font-size="11" fill="#141413" text-anchor="middle" font-weight="500">Metering ownership</text>
 <text x="340" y="368" font-size="11" fill="#7A756C" text-anchor="middle">producer only</text>
 <rect x="450" y="322" width="186" height="62" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="1.2" stroke-dasharray="4 4"/>
-<text x="543" y="348" font-size="11.5" fill="#141413" text-anchor="middle" font-weight="500">Audit append-only</text>
+<text x="543" y="348" font-size="11" fill="#141413" text-anchor="middle" font-weight="500">Audit append-only</text>
 <text x="543" y="368" font-size="11" fill="#7A756C" text-anchor="middle">hash chain + anchor</text>
 <text x="30" y="416" font-size="11" fill="#7A756C" text-anchor="start" font-weight="500">DASHED BLOCK COLOURS</text>
-<rect x="30" y="428" width="20" height="14" rx="3" fill="#FDFCF9" stroke="#141413" stroke-width="1.2" stroke-dasharray="4 4"/>
+<rect x="30" y="428" width="20" height="14" rx="2" fill="#FDFCF9" stroke="#141413" stroke-width="1.2" stroke-dasharray="4 4"/>
 <text x="56" y="439" font-size="11" fill="#141413" text-anchor="start" font-weight="500">ink · rules / contracts</text>
-<rect x="330" y="428" width="20" height="14" rx="3" fill="#FDFCF9" stroke="#4E60FF" stroke-width="1.2" stroke-dasharray="5 4"/>
+<rect x="330" y="428" width="20" height="14" rx="2" fill="#FDFCF9" stroke="#4E60FF" stroke-width="1.2" stroke-dasharray="5 4"/>
 <text x="356" y="439" font-size="11" fill="#4E60FF" text-anchor="start" font-weight="500">blue · active cross-cutting</text>
 <text x="30" y="465" font-size="11" fill="#7A756C" text-anchor="start">both are non-deployable; ink governs the system, blue flows through it</text>
 </g></svg>

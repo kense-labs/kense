@@ -4,56 +4,56 @@
 <desc>A group of dashed-outline blocks: five shared-kernel planes, three event and consistency primitives, and three cross-cutting capabilities still missing from the baseline. Dashed blocks denote logical or cross-cutting concerns, not deployable services.</desc>
 <rect x="0" y="0" width="680" height="490" rx="14" fill="#F8F6F0"/>
 <g font-family="Menlo, SFMono-Regular, Consolas, monospace">
-<text x="30" y="26" font-size="13" fill="#141413" text-anchor="start" font-weight="500">CROSS-CUTTING &amp; CONSISTENCY PLANES  ·  dashed blocks</text>
+<text x="30" y="26" font-size="12.5" fill="#141413" text-anchor="start" font-weight="500">CROSS-CUTTING &amp; CONSISTENCY PLANES  ·  dashed blocks</text>
 <text x="30" y="44" font-size="11" fill="#7A756C" text-anchor="start">dashed = logical / cross-cutting concern, not a deployable service</text>
-<rect x="30" y="56" width="620" height="106" rx="10" fill="none" stroke="#141413" stroke-width="0.9" stroke-dasharray="3 5" opacity="0.4"/>
+<rect x="30" y="56" width="620" height="106" rx="8" fill="none" stroke="#141413" stroke-width="0.9" stroke-dasharray="3 5" opacity="0.4"/>
 <text x="44" y="76" font-size="11" fill="#4E60FF" text-anchor="start" font-weight="500">SHARED KERNEL  ·  owned by contracts/</text>
 <rect x="44" y="86" width="110" height="62" rx="6" fill="#FDFCF9" stroke="#4E60FF" stroke-width="1.2" stroke-dasharray="5 4"/>
-<text x="99.0" y="112" font-size="11.5" fill="#141413" text-anchor="middle" font-weight="500">Identity</text>
+<text x="99.0" y="112" font-size="11" fill="#141413" text-anchor="middle" font-weight="500">Identity</text>
 <text x="99.0" y="132" font-size="11" fill="#4E60FF" text-anchor="middle">key · scope</text>
 <rect x="164" y="86" width="110" height="62" rx="6" fill="#FDFCF9" stroke="#4E60FF" stroke-width="1.2" stroke-dasharray="5 4"/>
-<text x="219.0" y="112" font-size="11.5" fill="#141413" text-anchor="middle" font-weight="500">URN Registry</text>
+<text x="219.0" y="112" font-size="11" fill="#141413" text-anchor="middle" font-weight="500">URN Registry</text>
 <text x="219.0" y="132" font-size="11" fill="#4E60FF" text-anchor="middle">routes · SDK</text>
 <rect x="284" y="86" width="110" height="62" rx="6" fill="#FDFCF9" stroke="#4E60FF" stroke-width="1.2" stroke-dasharray="5 4"/>
-<text x="339.0" y="112" font-size="11.5" fill="#141413" text-anchor="middle" font-weight="500">Metering</text>
+<text x="339.0" y="112" font-size="11" fill="#141413" text-anchor="middle" font-weight="500">Metering</text>
 <text x="339.0" y="132" font-size="11" fill="#4E60FF" text-anchor="middle">credit · ledger</text>
 <rect x="404" y="86" width="110" height="62" rx="6" fill="#FDFCF9" stroke="#4E60FF" stroke-width="1.2" stroke-dasharray="5 4"/>
-<text x="459.0" y="112" font-size="11.5" fill="#141413" text-anchor="middle" font-weight="500">Audit</text>
+<text x="459.0" y="112" font-size="11" fill="#141413" text-anchor="middle" font-weight="500">Audit</text>
 <text x="459.0" y="132" font-size="11" fill="#4E60FF" text-anchor="middle">hash chain</text>
 <rect x="524" y="86" width="110" height="62" rx="6" fill="#FDFCF9" stroke="#4E60FF" stroke-width="1.2" stroke-dasharray="5 4"/>
-<text x="579.0" y="112" font-size="11.5" fill="#141413" text-anchor="middle" font-weight="500">Vault</text>
+<text x="579.0" y="112" font-size="11" fill="#141413" text-anchor="middle" font-weight="500">Vault</text>
 <text x="579.0" y="132" font-size="11" fill="#4E60FF" text-anchor="middle">secret_ref</text>
-<rect x="30" y="174" width="620" height="106" rx="10" fill="none" stroke="#141413" stroke-width="0.9" stroke-dasharray="3 5" opacity="0.4"/>
+<rect x="30" y="174" width="620" height="106" rx="8" fill="none" stroke="#141413" stroke-width="0.9" stroke-dasharray="3 5" opacity="0.4"/>
 <text x="44" y="194" font-size="11" fill="#4E60FF" text-anchor="start" font-weight="500">EVENT &amp; CONSISTENCY  ·  cross-service guarantees</text>
 <rect x="44" y="204" width="186" height="62" rx="6" fill="#FDFCF9" stroke="#4E60FF" stroke-width="1.2" stroke-dasharray="5 4"/>
-<text x="137.0" y="230" font-size="11.5" fill="#141413" text-anchor="middle" font-weight="500">Outbox</text>
+<text x="137.0" y="230" font-size="11" fill="#141413" text-anchor="middle" font-weight="500">Outbox</text>
 <text x="137.0" y="250" font-size="11" fill="#4E60FF" text-anchor="middle">state + event, one txn</text>
 <rect x="247" y="204" width="186" height="62" rx="6" fill="#FDFCF9" stroke="#4E60FF" stroke-width="1.2" stroke-dasharray="5 4"/>
-<text x="340.0" y="230" font-size="11.5" fill="#141413" text-anchor="middle" font-weight="500">Saga</text>
+<text x="340.0" y="230" font-size="11" fill="#141413" text-anchor="middle" font-weight="500">Saga</text>
 <text x="340.0" y="250" font-size="11" fill="#4E60FF" text-anchor="middle">compensation</text>
 <rect x="450" y="204" width="186" height="62" rx="6" fill="#FDFCF9" stroke="#4E60FF" stroke-width="1.2" stroke-dasharray="5 4"/>
-<text x="543.0" y="230" font-size="11.5" fill="#141413" text-anchor="middle" font-weight="500">Idempotency</text>
+<text x="543.0" y="230" font-size="11" fill="#141413" text-anchor="middle" font-weight="500">Idempotency</text>
 <text x="543.0" y="250" font-size="11" fill="#4E60FF" text-anchor="middle">event_id dedupe</text>
-<rect x="30" y="292" width="620" height="106" rx="10" fill="none" stroke="#141413" stroke-width="0.9" stroke-dasharray="3 5" opacity="0.4"/>
+<rect x="30" y="292" width="620" height="106" rx="8" fill="none" stroke="#141413" stroke-width="0.9" stroke-dasharray="3 5" opacity="0.4"/>
 <text x="44" y="312" font-size="11" fill="#4E60FF" text-anchor="start" font-weight="500">MISSING CROSS-CUTTING CAPABILITIES  ·  0x01 baseline gaps</text>
 <rect x="44" y="322" width="186" height="62" rx="6" fill="#FDFCF9" stroke="#4E60FF" stroke-width="1.2" stroke-dasharray="5 4"/>
-<text x="137.0" y="348" font-size="11.5" fill="#141413" text-anchor="middle" font-weight="500">Notification</text>
+<text x="137.0" y="348" font-size="11" fill="#141413" text-anchor="middle" font-weight="500">Notification</text>
 <text x="137.0" y="368" font-size="11" fill="#4E60FF" text-anchor="middle">SSE · Webhook</text>
 <rect x="247" y="322" width="186" height="62" rx="6" fill="#FDFCF9" stroke="#4E60FF" stroke-width="1.2" stroke-dasharray="5 4"/>
-<text x="340.0" y="348" font-size="11.5" fill="#141413" text-anchor="middle" font-weight="500">User Entry</text>
+<text x="340.0" y="348" font-size="11" fill="#141413" text-anchor="middle" font-weight="500">User Entry</text>
 <text x="340.0" y="368" font-size="11" fill="#4E60FF" text-anchor="middle">Console · REST · SDK</text>
 <rect x="450" y="322" width="186" height="62" rx="6" fill="#FDFCF9" stroke="#4E60FF" stroke-width="1.2" stroke-dasharray="5 4"/>
-<text x="543.0" y="348" font-size="11.5" fill="#141413" text-anchor="middle" font-weight="500">Published Language</text>
+<text x="543.0" y="348" font-size="11" fill="#141413" text-anchor="middle" font-weight="500">Published Language</text>
 <text x="543.0" y="368" font-size="11" fill="#4E60FF" text-anchor="middle">contracts/ · OpenAPI</text>
 <text x="30" y="416" font-size="11" fill="#7A756C" text-anchor="start" font-weight="500">BLOCK TYPES</text>
-<rect x="30" y="428" width="20" height="14" rx="3" fill="#141413"/>
+<rect x="30" y="428" width="20" height="14" rx="2" fill="#141413"/>
 <text x="56" y="439" font-size="11" fill="#141413" text-anchor="start">skeleton</text>
-<rect x="180" y="428" width="20" height="14" rx="3" fill="#FDFCF9" stroke="#141413" stroke-width="1"/>
+<rect x="180" y="428" width="20" height="14" rx="2" fill="#FDFCF9" stroke="#141413" stroke-width="1.2"/>
 <text x="206" y="439" font-size="11" fill="#141413" text-anchor="start">service</text>
-<rect x="330" y="428" width="20" height="14" rx="3" fill="#FDFCF9" stroke="#4E60FF" stroke-width="1"/>
+<rect x="330" y="428" width="20" height="14" rx="2" fill="#FDFCF9" stroke="#4E60FF" stroke-width="1.2"/>
 <text x="356" y="439" font-size="11" fill="#141413" text-anchor="start">change</text>
-<rect x="480" y="428" width="20" height="14" rx="3" fill="#4E60FF"/>
+<rect x="480" y="428" width="20" height="14" rx="2" fill="#4E60FF"/>
 <text x="506" y="439" font-size="11" fill="#141413" text-anchor="start">emphasis</text>
-<rect x="30" y="454" width="20" height="14" rx="3" fill="#FDFCF9" stroke="#4E60FF" stroke-width="1.2" stroke-dasharray="4 3"/>
+<rect x="30" y="454" width="20" height="14" rx="2" fill="#FDFCF9" stroke="#4E60FF" stroke-width="1.2" stroke-dasharray="4 3"/>
 <text x="56" y="465" font-size="11" fill="#4E60FF" text-anchor="start" font-weight="500">white / blue dashed · logical, cross-cutting, non-deployable  ← this sheet</text>
 </g></svg>
