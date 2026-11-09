@@ -1,3 +1,6 @@
+# Repository-local source checkout: docs and diagrams only.
+/platform/
+
 node_modules/
 __pycache__/
 *.pyc
