@@ -32,7 +32,7 @@ def font(v: str) -> str:
         return FONT_TOKENS[0]
     if f <= 11.5:
         return FONT_TOKENS[1]
-    if f <= 13:
+    if f <= 14:
         return FONT_TOKENS[2]
     return FONT_TOKENS[3]
 

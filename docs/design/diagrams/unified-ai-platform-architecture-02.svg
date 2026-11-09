@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 680 430" width="100%" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>ARCH 02 · Supply chain and feedback loop</title>
+<desc>Actions、Packages、Releases 形成供应链总线向下注入制品与版本，五层供给侧依赖链自左向右提供能力，生产轨迹经底部虚线反馈轨回流为下一轮训练数据。</desc>
+<defs>
+  <marker id="unified-ai-platform-architecture-02-archA2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </marker>
+</defs>
+<rect x="0" y="0" width="680" height="430" rx="14" fill="#F8F6F0"/>
+<g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">
+
+<rect x="56" y="56" width="160" height="52" rx="6" fill="#FDFCF9" stroke="#4E60FF" stroke-width="1.2"/>
+<text x="136" y="78" font-size="12.5" fill="#141413" text-anchor="middle">Actions</text>
+<text x="136" y="95" font-size="11" fill="#4E60FF" text-anchor="middle">CI / CD</text>
+<rect x="260" y="56" width="160" height="52" rx="6" fill="#FDFCF9" stroke="#4E60FF" stroke-width="1.2"/>
+<text x="340" y="78" font-size="12.5" fill="#141413" text-anchor="middle">Packages</text>
+<text x="340" y="95" font-size="11" fill="#4E60FF" text-anchor="middle">OCI · SBOM</text>
+<rect x="464" y="56" width="160" height="52" rx="6" fill="#FDFCF9" stroke="#4E60FF" stroke-width="1.2"/>
+<text x="544" y="78" font-size="12.5" fill="#141413" text-anchor="middle">Releases</text>
+<text x="544" y="95" font-size="11" fill="#4E60FF" text-anchor="middle">Canary → Prod</text>
+<path d="M216 82 L256 82 M420 82 L460 82" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#unified-ai-platform-architecture-02-archA2)"/>
+
+<path d="M136 108 L136 168 M340 108 L340 168 M544 108 L544 168 M136 168 L544 168" fill="none" stroke="#141413" stroke-width="0.9" stroke-dasharray="4 4" opacity="0.55"/>
+<path d="M208 168 L208 194 M340 168 L340 194 M472 168 L472 194" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#unified-ai-platform-architecture-02-archA2)"/>
+
+<rect x="20" y="196" width="112" height="58" rx="6" fill="#141413"/>
+<text x="76" y="221" font-size="12.5" fill="#FDFCF9" text-anchor="middle">IaaS</text>
+<text x="76" y="239" font-size="11" fill="#FDFCF9" text-anchor="middle">VM · VPC</text>
+<rect x="152" y="196" width="112" height="58" rx="6" fill="#141413"/>
+<text x="208" y="221" font-size="12.5" fill="#FDFCF9" text-anchor="middle">MaaS</text>
+<text x="208" y="239" font-size="11" fill="#FDFCF9" text-anchor="middle">/v1 Model</text>
+<rect x="284" y="196" width="112" height="58" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="340" y="221" font-size="12.5" fill="#141413" text-anchor="middle">TaaS</text>
+<text x="340" y="239" font-size="11" fill="#7A756C" text-anchor="middle">Adapter</text>
+<rect x="416" y="196" width="112" height="58" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="472" y="221" font-size="12.5" fill="#141413" text-anchor="middle">PaaS · AaaS</text>
+<text x="472" y="239" font-size="11" fill="#7A756C" text-anchor="middle">App · Agent</text>
+<rect x="548" y="196" width="112" height="58" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="604" y="221" font-size="12.5" fill="#141413" text-anchor="middle">SaaS</text>
+<text x="604" y="239" font-size="11" fill="#7A756C" text-anchor="middle">Entity · Tool</text>
+<path d="M132 225 L150 225 M264 225 L282 225 M396 225 L414 225 M528 225 L546 225" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#unified-ai-platform-architecture-02-archA2)"/>
+
+<path d="M340 254 L340 300" fill="none" stroke="#141413" stroke-width="1.2" stroke-dasharray="5 4"/>
+<path d="M604 254 L604 330 L350 330 L350 256" fill="none" stroke="#4E60FF" stroke-width="1.2" stroke-dasharray="5 4" marker-end="url(#unified-ai-platform-architecture-02-archA2)"/>
+<path d="M60 330 C36 330 36 308 56 308" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#unified-ai-platform-architecture-02-archA2)"/>
+</g>
+</svg>

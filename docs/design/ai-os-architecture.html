@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI OS · 架构设计与工程目录结构</title>
+<style>
+  :root{ --paper:#F8F6F0; --ink:#141413; --clay:#4E60FF; --note:#7A756C;
+    --chalk:#FDFCF9; --line:#DCD6C8; --soft:#EFEBE1; --page:#EDEAE2; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--page);color:var(--ink);
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"PingFang SC","Microsoft YaHei",monospace;
+    font-size:13px;line-height:1.75}
+  .wrap{max-width:1080px;margin:0 auto;padding:40px 28px 90px}
+  header{background:var(--paper);border:1px solid var(--line);border-left:3px solid var(--ink);
+    border-radius:14px;padding:26px 30px;margin-bottom:20px}
+  h1{font-size:22px;font-weight:500;margin:0 0 6px;letter-spacing:-.01em}
+  .sub{font-size:12.5px;color:var(--note);margin:0 0 14px}
+  .meta{font-size:11.5px;color:var(--note);display:flex;gap:18px;flex-wrap:wrap}
+  h2{font-size:15px;font-weight:500;margin:40px 0 14px;padding-top:12px;
+    border-top:1px solid var(--line);letter-spacing:.02em}
+  h3{font-size:13.5px;font-weight:500;margin:24px 0 10px}
+  p{margin:0 0 12px}
+  ul,ol{margin:0 0 14px;padding-left:22px}
+  li{margin:5px 0}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;
+    background:var(--soft);border:1px solid var(--line);border-radius:3px;padding:1px 5px}
+  pre{background:var(--ink);color:var(--chalk);border-radius:8px;padding:16px 18px;
+    overflow-x:auto;font-size:12px;line-height:1.7;margin:0 0 18px}
+  pre code{background:none;border:0;padding:0;color:inherit}
+  table{width:100%;border-collapse:collapse;margin:0 0 18px;font-size:12px}
+  th,td{text-align:left;border-bottom:1px solid var(--line);padding:8px 10px;vertical-align:top}
+  th{background:var(--soft);font-weight:500;color:var(--note);font-size:11px;letter-spacing:.02em}
+  .lead{border-left:3px solid var(--ink);background:var(--paper);padding:14px 18px;border-radius:0 8px 8px 0;margin:0 0 20px}
+  .lead p{margin:0}
+  .warn{border-left:3px solid var(--clay);background:#E9ECFF;padding:12px 16px;border-radius:0 8px 8px 0;margin:0 0 18px}
+  .warn p{margin:0;font-size:12.5px}
+  .tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;margin-right:6px;
+    background:var(--soft);color:var(--note);border:1px solid var(--line)}
+  .tag.t{background:var(--ink);color:var(--chalk);border-color:var(--ink)}
+  .tag.a{background:var(--clay);color:var(--chalk);border-color:var(--clay)}
+  .tag.b{background:transparent;color:var(--ink);border:1px dashed var(--ink)}
+  .diagram{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:14px;margin:0 0 20px;overflow-x:auto}
+  .diagram svg{display:block;min-width:620px;margin:0 auto}
+  .diagram-cap{font-size:11px;color:var(--note);margin:0 0 10px;padding:0 4px;letter-spacing:.02em}
+  .foot{margin-top:48px;padding-top:20px;border-top:1px solid var(--line);font-size:11.5px;color:var(--note)}
+  @media print{body{background:#fff;font-size:11.5px}.wrap{padding:0;max-width:none}h2{page-break-after:avoid}pre,table,.diagram{page-break-inside:avoid}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>AI OS · 架构设计与工程目录结构</h1>
+  <p class="sub">一把 API Key 消费全部能力；异构算力、模型、Agent、应用与数据能力统一纳管</p>
+  <div class="meta">
+    <span>完整设计 v2.0 · 全 Rust，无 kstack 依赖</span>
+    <span>2026-11-08</span>
+    <span>基线：aster（Rust 内核）× kense 现有 Rust 仓（kpower / kbox / kcl / ksandbox）</span>
+    <span>命名：职责命名 · 无前缀</span>
+  </div>
+</header>
+
+<div class="lead">
+  <p><b>定位</b>：AI OS 是「异构资源与 AI 能力的统一供给平面」，不是 AI 应用开发平台。它把 IaaS 算力、MaaS 模型、TaaS 训练、PaaS 应用、AaaS Agent、SaaS 数据能力、开发者供应链收进一个凭证、一套计量、一套审计之下。用户拿一把 Key 调用所有服务，平台负责隔离、路由、计量、审计与回滚。</p>
+</div>
+
+<h2>0x00 : 设计原则</h2>
+<ol>
+  <li><b>一把 Key = 一个凭证入口</b>：认证 → 授权 → 计量 → 账单 → 可追责，是平台成立的唯一闭环。</li>
+  <li><b>Key 只在边缘出现一次</b>：下游只认短时、降权、限定 audience 的内部身份；沙箱零凭据。</li>
+  <li><b>全 Rust，统一契约与模块边界</b>：控制面与 MaaS 执行面同在 <code>platform</code> 的单 Rust workspace，靠版本化契约与模块边界连接。</li>
+  <li><b>计量点唯一归属资源生产者</b>：网关只记请求数/出网字节，token 归 MaaS，结果条数归 SaaS；嵌套调用挂同一条归属链。</li>
+  <li><b>幂等与补偿先于功能</b>：跨服务写操作默认会失败一半，长 Job 必须状态机 + Saga 补偿，预算与状态同域结算。</li>
+  <li><b>可恢复性靠演练证明</b>：备份、降级、吊销必须定期实测；审计只追加、不可篡改。</li>
+</ol>
+<p><b>边界判定</b>：新增功能前先问「缺了它，一把 Key 的闭环是否断 / 多租户是否不能交付 / 用户是否用不上」；三问皆否则不做。Prompt 注册表、RAG、向量库、独立 LLMOps 产品、内容护栏产品、可视化编排、市场分成、状态页、SLA 赔付、Terraform Provider 等<b>均不做</b>——用户可在 PaaS 自建或接第三方。</p>
+
+<h2>0x01 : 必要功能（12 项）</h2>
+<table>
+  <thead><tr><th style="width:6%">#</th><th style="width:18%">能力</th><th>最小交付</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>统一凭证</td><td>一把 Key + tenant / project / env 三层 + scope 与预算闸 + 短时身份令牌交换；第三方凭据由 Vault 保管（0x03）</td></tr>
+    <tr><td>2</td><td>统一网关</td><td>LLM / API / MCP 路由 + 限流 + 失败回退 + 快照准入</td></tr>
+    <tr><td>3</td><td>计量与账单</td><td>统一 meter 事件 + credit 归一化 + 预扣 / 续扣 / 结算 + 按租户账单</td></tr>
+    <tr><td>4</td><td>审计</td><td>只追加事件 + 哈希链 + 敏感动作先落审计再执行</td></tr>
+    <tr><td>5</td><td>租户隔离</td><td>tenant_id + RLS + 强制查询门禁；默认共享表，不做独立集群分级</td></tr>
+    <tr><td>6</td><td>最小权限</td><td>管理员 / 开发者 / 审计员三类角色；审计员与管理权分离</td></tr>
+    <tr><td>7</td><td>服务目录</td><td>URN 注册 scope 与计量单位，网关据此生成路由</td></tr>
+    <tr><td>8</td><td>一致性</td><td>幂等键 + Job 状态机 + 三个补偿场景（发布失败、任务卡死、计量重投）</td></tr>
+    <tr><td>9</td><td>发布闭环</td><td>一套共享原语：不可变版本 + 别名 + 回滚，覆盖 PaaS / MaaS / TaaS / Releases</td></tr>
+    <tr><td>10</td><td>事件通知</td><td>状态变化 → SSE / Webhook，供 Actions、审计、通知消费</td></tr>
+    <tr><td>11</td><td>用户入口</td><td>一个控制台 + 一套 REST + 一份 SDK/CLI + 一份文档</td></tr>
+    <tr><td>12</td><td>各层最小能力</td><td>IaaS 实例与配额；MaaS 部署 + /v1 + 扩缩容（platform 自研，复用 kpower）；TaaS 数据集 / Job / checkpoint / 评测门禁 / adapter；PaaS Git→Build→Deploy→Rollback + Secrets；AaaS 沙箱 + 挂起唤醒 + 检查点 + 零凭据 egress；SaaS 统一 schema + 按结果计费；Actions workflow + 不可变制品 + 签名 + 发布</td></tr>
+  </tbody>
+</table>
+
+<h2>0x02 : 总体架构</h2>
+<div class="diagram">
+  <p class="diagram-cap">AI OS 分层　/　九类服务由唯一网关接入，五个横切平面贯穿全栈，底层为异构资源池</p>
+<svg viewBox="0 0 680 470" width="100%" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>AI OS 总体分层架构</title>
+<desc>客户端持一把 Key 进入统一网关，网关路由到九类服务；身份、计量、审计、Vault、URN 目录五个横切平面贯穿全栈；底层异构资源池提供算力。</desc>
+<defs>
+  <marker id="osA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </marker>
+</defs>
+<rect x="0" y="0" width="680" height="470" rx="14" fill="#F8F6F0"/>
+<g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">
+<rect x="250" y="20" width="180" height="46" rx="8" fill="#141413"/>
+<text x="340" y="47" font-size="12.5" fill="#FDFCF9" text-anchor="middle">Clients · One Key</text>
+<path d="M340 66 L340 90" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#osA)"/>
+<rect x="130" y="92" width="420" height="48" rx="8" fill="#141413"/>
+<text x="340" y="112" font-size="12.5" fill="#FDFCF9" text-anchor="middle">Unified Gateway · PEP</text>
+<text x="340" y="130" font-size="11" fill="#FDFCF9" text-anchor="middle">LLM · API · MCP · A2A</text>
+<path d="M340 140 L340 162" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#osA)"/>
+
+<rect x="24" y="164" width="452" height="204" rx="8" fill="none" stroke="#141413" stroke-width="0.9" stroke-dasharray="3 5" opacity="0.45"/>
+<rect x="30" y="176" width="136" height="52" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="98" y="197" font-size="12.5" fill="#141413" text-anchor="middle">AaaS</text>
+<text x="98" y="215" font-size="11" fill="#7A756C" text-anchor="middle">Actor Runtime</text>
+<rect x="182" y="176" width="136" height="52" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="250" y="197" font-size="12.5" fill="#141413" text-anchor="middle">SaaS</text>
+<text x="250" y="215" font-size="11" fill="#7A756C" text-anchor="middle">Resource Layer</text>
+<rect x="334" y="176" width="136" height="52" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="402" y="197" font-size="12.5" fill="#141413" text-anchor="middle">PaaS</text>
+<text x="402" y="215" font-size="11" fill="#7A756C" text-anchor="middle">App Hosting</text>
+<rect x="30" y="240" width="136" height="52" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="98" y="261" font-size="12.5" fill="#141413" text-anchor="middle">TaaS</text>
+<text x="98" y="279" font-size="11" fill="#7A756C" text-anchor="middle">Post-Training</text>
+<rect x="182" y="240" width="136" height="52" rx="6" fill="#141413"/>
+<text x="250" y="261" font-size="12.5" fill="#FDFCF9" text-anchor="middle">MaaS</text>
+<text x="250" y="279" font-size="11" fill="#FDFCF9" text-anchor="middle">Model Serving</text>
+<rect x="334" y="240" width="136" height="52" rx="6" fill="#141413"/>
+<text x="402" y="261" font-size="12.5" fill="#FDFCF9" text-anchor="middle">IaaS</text>
+<text x="402" y="279" font-size="11" fill="#FDFCF9" text-anchor="middle">VM · VPC · Vol</text>
+<rect x="30" y="304" width="136" height="52" rx="6" fill="#FDFCF9" stroke="#4E60FF" stroke-width="1.2"/>
+<text x="98" y="325" font-size="12.5" fill="#141413" text-anchor="middle">Actions</text>
+<text x="98" y="343" font-size="11" fill="#4E60FF" text-anchor="middle">CI · CD</text>
+<rect x="182" y="304" width="136" height="52" rx="6" fill="#FDFCF9" stroke="#4E60FF" stroke-width="1.2"/>
+<text x="250" y="325" font-size="12.5" fill="#141413" text-anchor="middle">Packages</text>
+<text x="250" y="343" font-size="11" fill="#4E60FF" text-anchor="middle">OCI Artifacts</text>
+<rect x="334" y="304" width="136" height="52" rx="6" fill="#FDFCF9" stroke="#4E60FF" stroke-width="1.2"/>
+<text x="402" y="325" font-size="12.5" fill="#141413" text-anchor="middle">Releases</text>
+<text x="402" y="343" font-size="11" fill="#4E60FF" text-anchor="middle">Canary · Rollback</text>
+
+<path d="M476 200 L486 200 M476 264 L486 264 M476 328 L486 328" fill="none" stroke="#141413" stroke-width="0.9" stroke-dasharray="3 4" opacity="0.5"/>
+<rect x="486" y="176" width="164" height="34" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="568" y="197" font-size="11" fill="#141413" text-anchor="middle">IDENTITY</text>
+<rect x="486" y="216" width="164" height="34" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="568" y="237" font-size="11" fill="#141413" text-anchor="middle">METER</text>
+<rect x="486" y="256" width="164" height="34" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="568" y="277" font-size="11" fill="#141413" text-anchor="middle">AUDIT</text>
+<rect x="486" y="296" width="164" height="34" rx="6" fill="#4E60FF"/>
+<text x="568" y="317" font-size="11" fill="#FDFCF9" text-anchor="middle">VAULT</text>
+<rect x="486" y="336" width="164" height="34" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="568" y="357" font-size="11" fill="#141413" text-anchor="middle">URN REGISTRY</text>
+
+<path d="M250 368 L250 394" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#osA)"/>
+<rect x="130" y="396" width="420" height="54" rx="8" fill="#141413"/>
+<text x="340" y="417" font-size="12.5" fill="#FDFCF9" text-anchor="middle">Heterogeneous Resource Pool</text>
+<text x="340" y="436" font-size="11" fill="#FDFCF9" text-anchor="middle">GPU · CPU · RDMA · Object Storage · Cloud Providers</text>
+</g>
+</svg>
+</div>
+<p><b>供给侧依赖链</b>：<code>IaaS → MaaS → TaaS → PaaS / AaaS → SaaS</code>；下层向上层提供能力，上层向下层回报生产数据。<code>Actions / Packages / Releases</code> 横切供应链，把变更送进这条链；生产轨迹回流为下一轮训练数据。<b>控制面与数据面分离</b>：控制面短暂不可用时，网关按本地策略快照与脏路由表继续服务；吊销是唯一需要全局快速生效的操作，走独立失效广播。</p>
+
+<h2>0x03 : 核心领域模型</h2>
+<p>AI OS 的内核不是某个服务，而是下面七个共享模型。它们决定「一把 Key」是否能成立。</p>
+
+<h3>3.1 身份与 Key</h3>
+<pre><code>Key        = ak_live_{tenant}.{project}.{env}.{random}   // 库内只存 HMAC/argon2id 哈希 + 前缀
+Scope      = tenant → project → env                     // 计费 / 配额 / 发布边界
+Exchange   = RFC 8693 → SVID / JWT (5~15min, aud 单服务, scope 最小子集, trace_id)
+Delegation = on-behalf-of 降权链，禁止原样转发身份（防 confused deputy）
+</code></pre>
+<p>human proof 归 auth，service / workload 归控制面，Key 权威单点；网关 <code>forward-auth</code> 回注 <code>subject / plane / org</code>。不形成两套 Key 体系。</p>
+
+<h3>3.2 URN 服务目录</h3>
+<pre><code>urn:plat:maas:model:*          urn:plat:taas:job:*
+urn:plat:aaas:actor:{id}:invoke  urn:plat:saas:tool:get_organization
+urn:plat:vault:secret:{name}    urn:plat:releases:channel:prod
+</code></pre>
+<p>注册时声明协议、计量单位、配额维度、SLO、scope 与审计等级；网关据此生成路由、SDK 与文档。<b>所有能力先注册再暴露</b>，避免九套服务各写一遍鉴权。</p>
+
+<h3>3.3 计量与账单</h3>
+<pre><code>Meter = { event_id, trace_id, billing_parent, tenant, project, env,
+          key_id, service, resource, quantity, unit, outcome, reservation_id, ts }
+</code></pre>
+<p>各单位经版本化汇率表折算成 credit；长任务创建预扣 → 心跳续扣 → 结束结算；预算判定在网关本地令牌桶，账单链路完全异步。<b>商业账本与 usage ledger 双轨</b>，由架构测试强制不直连。</p>
+
+<h3>3.4 审计</h3>
+<pre><code>Audit = { event_id, seq, prev_hash, hash, actor, auth, delegation_chain,
+          action, resource, decision, reason, before, after, diff, result, cost_event_id }
+</code></pre>
+<p>每租户一条只追加哈希链，链头定期外部锚定；敏感动作先落审计再执行；审计员与管理员权限互斥，审计查询本身也产生事件。七类事件：认证凭据、授权决策、资源变更、数据访问、Agent 行为、计费预算、管理动作。</p>
+
+<h3>3.5 Vault 凭据模型</h3>
+<pre><code>Scope      = (organization_id, project_id, environment_id)
+SecretRef  = urn:plat:vault:secret:{name}
+Credential = { secret_ref, version, ciphertext, key_id, expires_at, aggregate_version }
+State      = sealed | active | revoked
+Receipt    = { receipt_id, scope, provider, secret_ref, version, status, applied_at }
+</code></pre>
+<p><code>materialize</code>（封存密文）→ <code>apply</code>（按 scope × provider 激活）→ <code>clear / revoke</code>（终态），每步产生 receipt 并写入审计链；管理面 loopback-only 或经 forward-auth。<b>主 Key 只存哈希，第三方凭据由 Vault 保管，egress 注入只传 <code>secret_ref + version</code></b>，明文不进沙箱、日志、审计、wire 与 OpenAPI 快照。<code>aster_inf_</code> 前缀与 <code>/v1/api/__local/vault/*</code> 属线协议值，迁移只改 crate 名不改值。</p>
+
+<h3>3.6 发布原语</h3>
+<p><b>不可变版本 + 别名 + 流量权重</b>：一套原语同时支撑 PaaS 即时回滚、MaaS canary、TaaS adapter 上下线、Releases 灰度，避免四套语义不一致的实现。评测门禁复用同一套 Benchmark / Judge，服务训练后验证、模型上线与线上回归。</p>
+
+<h3>3.7 事件与一致性</h3>
+<pre><code>Job    = created → reserved → running → succeeded | failed | cancelled → settled
+Outbox = PG 单事务写业务状态 + 事件 → NATS，consumer 幂等 apply
+补偿   = 发布失败回滚别名 / 任务卡死按租约超时释放预算 / 计量重投按 event_id 去重
+</code></pre>
+<p>九类服务的状态变化统一发事件，供 Actions、审计、通知、计费订阅消费；跨服务不做分布式事务，用 Saga 补偿。事件带签名、重试退避、死信与投递回放。</p>
+
+<h2>0x04 : 技术选型与进程边界</h2>
+<table>
+  <thead><tr><th style="width:18%">层</th><th style="width:28%">选型</th><th>依据</th></tr></thead>
+  <tbody>
+    <tr><td>边缘网关</td><td>Rust / <code>gateway</code>（aster-gateway）</td><td>hyper + rustls、JWT/ACL/ACME、standalone 与 cloud-managed 双模式快照、OpenAI 兼容、inference-key 准入与 TokenReservation；唯一公共边缘</td></tr>
+    <tr><td>控制面</td><td>Rust / <code>platform</code>（aster-cloud 骨架）</td><td>Org→Project→Env→Grant 四层 Scope、PG 单事务 + 幂等 + 聚合版本 + Outbox、Saga、OpenAPI</td></tr>
+    <tr><td>MaaS 执行面</td><td><b>Rust</b> / <code>platform</code> 自研</td><td>在 kense 用 Rust 实现 kstack 等效能力，<b>不再依赖 kstack</b>；复用 kpower 的 /v1 推理层与 PD 分离、kbox 的 MicroVM/OCI 运行时、kcl 的规格校验</td></tr>
+    <tr><td>AaaS 执行内核</td><td>Rust / <code>core</code> + <code>effect</code> + <code>acp</code></td><td>单一 Fact Log 折出 view/transitions、带键幂等转移、工具回合 checkpoint、HITL；长任务恢复直接复用</td></tr>
+    <tr><td>沙箱与运行时</td><td><code>kbox</code> / <code>ksandbox</code>（已有仓）</td><td>MicroVM、OCI runtime、进程级 fail-closed 沙箱；已完成迁移，不新建</td></tr>
+    <tr><td>控制台</td><td>React 19 + Rsbuild 2</td><td>前后端统一为 Rust + React 一套构建链，只需一套组件与构建链</td></tr>
+    <tr><td>数据与事件</td><td>PostgreSQL + RLS；NATS Outbox</td><td>控制面 / 账单 / 审计 / Vault 走 PG；时序与日志保留专用库；Outbox 支撑事件与补偿</td></tr>
+    <tr><td>本地开发编排</td><td>Tilt + docker-compose（仅开发）</td><td>PG / Redis / NATS / S3 起本地依赖，不作为生产架构</td></tr>
+    <tr><td>复用基础</td><td><code>kpower / kbox / kcl / ksandbox</code></td><td>kpower：OpenAI /v1、SSE、模型拉取、PD 分离、多后端与准入回执；kbox：MicroVM 生命周期、OCI 镜像拉取与 LRU 缓存、快照、健康检查、指标；kcl：KCL 规格声明与形状校验；ksandbox：进程级工具隔离</td></tr>
+  </tbody>
+</table>
+<div class="warn">
+  <p><b>全 Rust 统一</b>：控制面与 MaaS 执行面都在 <code>platform</code> 的单一 Rust workspace 内，一份 Cargo.lock、一套契约、一套测试门禁；不再有 Go 进程边界。<b>统一 Harness Adapter</b> 作防腐层，把 ACP / HTTP-gRPC / SDK / CLI / A2A 映射为发现能力、准备、提交、观察、交互、取消恢复、收集结果 7 个操作；<code>TaskSpec / RunBinding / HandoffBundle / TaskResult</code> 不携带协议专属字段。</p>
+</div>
+<h3>4.1 去 kstack 化：Rust MaaS 模块组成</h3>
+<p><b>目标</b>：在 <code>platform</code> 的单 Rust workspace 内实现 kstack 等效能力，<b>运行时、构建与部署都不再依赖 kstack</b>（其源码当前也不在本机）。不是从零写：推理层、执行运行时与配置校验复用 kense 已有的 Rust 仓，新建的只是缺失的控制面能力。</p>
+<table>
+  <thead><tr><th style="width:30%">kstack 能力</th><th style="width:28%">Rust 落点</th><th>来源</th></tr></thead>
+  <tbody>
+    <tr><td>392 模型 / 1235 启动规格</td><td><code>catalog</code> · ModelSpec / accelerator / revision / launch_args</td><td>新建，骨架已落地</td></tr>
+    <tr><td>异构卡事实、显存与 dGPU 配额</td><td><code>gpu</code> · Vendor / Device / NodeFacts / Quota</td><td>新建，骨架已落地</td></tr>
+    <tr><td>可解释调度与放置</td><td><code>scheduler</code> · filter → score → RejectReason</td><td>新建，骨架已落地</td></tr>
+    <tr><td>agent 零入站外连、心跳、租约、事实上报</td><td><code>node-agent</code> · Heartbeat / Lease / Agent</td><td>新建，骨架已落地</td></tr>
+    <tr><td>镜像与权重分发、节点间 peer sync</td><td><code>distributor</code> · present → peer copy → pull</td><td>新建，骨架已落地；镜像侧复用 kbox <code>oci/store</code></td></tr>
+    <tr><td>实例 Job 状态机 / 预算结算</td><td><code>state</code> · Created → … → Settled</td><td>新建，骨架已落地</td></tr>
+    <tr><td>OpenAI /v1、SSE、PD 分离、多后端</td><td><code>inference</code> + <code>kpower</code></td><td>骨架 + 复用 kpower 的 <code>/v1/*</code> 与 distributed-serving</td></tr>
+    <tr><td>容器 / MicroVM 生命周期、快照、健康检查</td><td><code>kbox</code></td><td>复用（GPU 透传尚未实现，需补）</td></tr>
+    <tr><td>启动规格声明与校验</td><td><code>kcl</code></td><td>复用形状校验；数值范围与 secret 语义需自建</td></tr>
+    <tr><td>控制面 REST / 多租户 / 计量 / 审计</td><td><code>platform</code> control-plane</td><td>按 0x03 七个领域模型新建</td></tr>
+  </tbody>
+</table>
+<p><b>已落地的第一步</b>：<code>/Users/roylin/code/kense/platform/</code> 已建立 7 个零外部依赖的 crate（<code>catalog / gpu / scheduler / node-agent / distributor / state / inference</code>），各自带领域类型与单元测试；<code>cargo check --offline</code> 与 <code>cargo test --offline</code> 全绿。<b>这是可编译的架构骨架，不是完整等价实现</b>——仍需补齐 GPU 透传、权重分发实装、WS + yamux 双通道、多机 TP/PP、dGPU 后端、benchmark / Playground、PG 持久化与管理面 REST。</p>
+<p><b>等价验收</b>：以 kstack 的公开行为作对照基准（模型×卡组合可部署、放置可解释、按 key 计量、镜像/权重可离线导入、/v1 兼容），逐项写对照测试；迁移期允许双跑对账，但 <b>kstack 不作为运行时依赖</b>，也不进入 <code>platform</code> 的 Cargo 依赖图。</p>
+
+<p><b>契约包是唯一事实源</b>：版本化 DTO + URN 目录 + HTTP 路径常量 + <code>*_SCHEMA_V1</code>；OpenAPI 由路由表生成并做快照测试防漂移；错误信封为「稳定 CODE + params + 英文 fallback → UI 本地化」，由 <code>i18n-check</code> 强制一一对应；Rust / Go / TS 客户端全部由契约生成，生成物禁手改。</p>
+
+<h2>0x05 : 工程目录结构</h2>
+<div class="diagram">
+  <p class="diagram-cap">仓库拓扑　/　独立仓 + 单一后端主仓，契约包为唯一事实源，依赖方向单向</p>
+<svg viewBox="0 0 680 400" width="100%" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>工程仓库拓扑</title>
+<desc>契约包被控制台与 Rust 后端主仓共享；后端主仓含 MaaS 能力并复用现有 Rust 仓；aster 仅保留客户端。</desc>
+<defs>
+  <marker id="dirA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </marker>
+</defs>
+<rect x="0" y="0" width="680" height="400" rx="14" fill="#F8F6F0"/>
+<g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">
+<rect x="130" y="20" width="420" height="46" rx="8" fill="#4E60FF"/>
+<text x="340" y="40" font-size="12.5" fill="#FDFCF9" text-anchor="middle">contracts · 语言中立契约包</text>
+<text x="340" y="58" font-size="11" fill="#FDFCF9" text-anchor="middle">URN · OpenAPI · 错误码 · Schema</text>
+<path d="M340 66 L340 88 M205 88 L475 88 M205 88 L205 102 M475 88 L475 102" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#dirA)"/>
+<rect x="90" y="104" width="230" height="60" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="205" y="127" font-size="12.5" fill="#141413" text-anchor="middle">console</text>
+<text x="205" y="146" font-size="11" fill="#7A756C" text-anchor="middle">React 19 · Rsbuild</text>
+<rect x="360" y="104" width="230" height="60" rx="6" fill="#4E60FF"/>
+<text x="475" y="127" font-size="12.5" fill="#FDFCF9" text-anchor="middle">platform</text>
+<text x="475" y="146" font-size="11" fill="#FDFCF9" text-anchor="middle">Rust · 控制面 + MaaS</text>
+<path d="M475 164 L475 190" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#dirA)"/>
+<rect x="30" y="192" width="620" height="52" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="340" y="213" font-size="12.5" fill="#141413" text-anchor="middle">复用 Rust 仓</text>
+<text x="340" y="232" font-size="11" fill="#7A756C" text-anchor="middle">kpower · kbox · kcl · ksandbox</text>
+<path d="M340 244 L340 268" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#dirA)"/>
+<rect x="130" y="270" width="420" height="52" rx="8" fill="#141413"/>
+<text x="340" y="291" font-size="12.5" fill="#FDFCF9" text-anchor="middle">aster · 仅客户端</text>
+<text x="340" y="310" font-size="11" fill="#FDFCF9" text-anchor="middle">CLI · Studio · Web · packages · plugins</text>
+<rect x="130" y="340" width="420" height="42" rx="8" fill="#FDFCF9" stroke="#7A756C" stroke-width="0.9"/>
+<text x="340" y="365" font-size="11" fill="#141413" text-anchor="middle">全 Rust · 无 Go / 无 kstack 依赖</text>
+</g>
+</svg>
+</div>
+
+<h3>5.1 完整目录树</h3>
+<pre><code>kense/                                  # 工作区：多个独立 git 仓，无根 Cargo.toml
+├── justfile                            # 顶层编排（转发各仓 recipe）
+├── brand.toml                          # ★ 品牌适配层：产品可见标识单点定义
+├── packaging/                          # 打包脚本读 brand.toml，构建期注入
+├── config.kcl                          # 本地开发配置
+├── ai-os-architecture.html             # 本文档
+│
+├── contracts/                          # ★ 独立仓：语言中立契约包（唯一事实源）
+│   ├── urn/registry.yaml               #   URN 服务目录：scope / 计量单位 / SLO
+│   ├── openapi/v1.json                 #   路由表生成，快照测试防漂移
+│   ├── errors/codes.yaml               #   稳定 CODE + params
+│   ├── errors/locales/{en,zh}.json     #   文案；i18n-check 强制一一对应
+│   ├── schema/                         #   *_SCHEMA_V1、EventEnvelope、JSON Schema
+│   ├── gen/{rust,go,ts}/               #   生成客户端（禁手改）
+│   ├── tests/snapshot/                 #   wire 常量与 OpenAPI 快照
+│   └── justfile
+│
+├── platform/                             # ★ 后端主仓：Rust workspace，一份 Cargo.lock
+│   ├── Cargo.toml                      #   resolver 3 / edition 2024 / [workspace.dependencies]
+│   ├── rust-toolchain.toml
+│   ├── AGENTS.md + constitution.md     #   Regime 查表制（路径→构建单元→测试→协议）
+│   ├── crates/                         #   基础库（叶子先迁）
+│   │   ├── boot/ boot-macros/        #     aster-boot
+│   │   ├── orm/ event/ flow/        #     SQL / 事件 / 工作流
+│   │   ├── lane/ sag/ form-core/    #     队列 / 检索 / 表单语义
+│   │   ├── core/ effect/ acp/       #     Agent 执行内核：Fact Log / Effect / ACP
+│   │   ├── okf/ memory/ search/     #     共享库（CLI 与 Studio 通过 git 依赖引用）
+│   │   ├── vec/ embedding/ bge/     #     向量 / 嵌入
+│   │   ├── deepseek/ sms/ sentry/   #     叶子服务
+│   │   ├── apofasi/ ocr/ office-*/  #     决策 / OCR / Office
+│   │   ├── use/ use-core/ use-extension/
+│   │   ├── vault/                     #   ★ Vault：Scope / SecretRef / State / Receipt
+│   │   └── catalog/ gpu/ scheduler/ node-agent/ distributor/ state/ inference/
+│   │                                   #   ★ MaaS 核心（已建可编译骨架）
+│   ├── contracts/                      #   契约的 Rust 实现
+│   │   ├── cloud-contracts/           #     *_SCHEMA_V1 值原样保留
+│   │   ├── cloud-sdk/
+│   │   └── fixtures/                   #     替代 gateway 按源码抓 fixture 的脆弱做法
+│   ├── services/                       #   服务 bin
+│   │   ├── gateway/                   #     唯一边缘（快照准入 / OpenAI 兼容）
+│   │   ├── control-plane/       #     控制面主服务
+│   │   ├── node-agent/          #     节点代理
+│   │   ├── authd/ billing/ configd/ #     认证 / 计费 / 配置
+│   │   ├── gateway-runtime/ runner/  #     数据面运行时 / CI runner
+│   │   └── api/                       #     桌面扩展面（归档不启用）
+│   ├── migrations/                     #   PostgreSQL：secrets / credentials / usage / audit
+│   ├── tests/                          #   workspace_dependencies.py / drift / snapshot
+│   ├── scripts/                        #   改名应用器 / 发布打包 / 证据链
+│   ├── docs/evidence/                  #   OUTCOME.md 行为变更证据
+│   └── .github/workflows/              #   hermetic 矩阵 + 真容器 campaign
+│
+├── console/                            # ★ React 19 + Rsbuild 2
+│   ├── src/{pages,components,api,i18n,theme}/
+│   ├── rsbuild.config.ts / package.json
+│   └── tests/
+│
+├── kpower/ kbox/ kcl/ ksandbox/        # 复用：推理层 / MicroVM+OCI / 规格校验 / 沙箱
+│
+├── kbox/                               # 已有：box / oci-runtime / runtime（kbox-*、koci-*、kbox-contract、kcommon）
+├── kcl/                                # 已有：kense-kcl（aster-acl 迁入）
+├── kpower/                             # 已有：aster-power 迁入
+├── ksandbox/                           # 已有：aster-sandbox 迁入
+├── kstudio/                            # 已有：GPUI 桌面控制台
+├── kbuddy/                             # 已有：Python 助手（源自 Octop）
+└── runtime/                            # 已有：kbox CLI → HTTP 测试台
+
+aster/                                  # 外部客户端仓（后端迁出后）
+├── Cargo.toml                          # exclude 清空，default-members 仅客户端
+├── apps/{aster,studio,web,dashboard,tutorial-agent}/
+├── packages/{ui,ce,form,office,...}/
+├── plugins/
+└── crates/{capture,browser,terminal/TUI,third-party}/
+</code></pre>
+
+<h3>5.2 命名规则与已占用名</h3>
+<table>
+  <thead><tr><th style="width:26%">规则</th><th>内容</th></tr></thead>
+  <tbody>
+    <tr><td>无前缀</td><td>新规划的一切按<b>职责命名</b>：<code>boot / orm / event / flow / vault / core / effect / acp / gateway / control-plane</code>；不带 <code>k</code>、不带组织名、不带产品名。<code>aster-*→k*</code> 的中间方案已废弃</td></tr>
+    <tr><td>代码中性化</td><td>业务代码只写职责名：用 <code>boot = { package = "boot", path = "crates/boot" }</code> 这类别名，让 <code>use boot::…</code> 里不出现任何前缀；先例见 <code>kbox/Cargo.toml:116</code> 的 <code>kcl = { package = "kense-kcl" }</code></td></tr>
+    <tr><td>品牌适配层</td><td>product_name / cli_name / domain / tag_prefix / install_dir / bundle_id / credential_prefix / urn_namespace 全部集中在 <code>brand.toml</code>，构建期注入；其余代码零品牌字面量</td></tr>
+    <tr><td>线协议中性化</td><td>新增 URN、事件 type、schema 常量一律用中性的 <code>urn:plat:…</code>；历史值（<code>aster_inf_</code>、<code>/v1/api/__local/vault/*</code>、proto 包名）走别名兼容，不硬改</td></tr>
+    <tr><td>服务 bin</td><td>用限定名避免同名异物：<code>authd / billing / configd / gateway-runtime / runner / cloud-*</code>；与 CLI 配置库同名的服务叫 <code>configd</code></td></tr>
+    <tr><td>历史仓例外</td><td><code>kstack / kbox / kcl / kpower / ksandbox / kstudio / kbuddy</code> 是既有 git 仓，<b>保留原名不改</b>（<code>kstack</code> 仅作历史参考，不参与构建与部署）；新代码不新建任何带 <code>k</code> 前缀的目录或 crate，跨仓引用一律用中性别名（<code>box / cl / power / sandbox</code>）</td></tr>
+    <tr><td>新增</td><td><code>vault</code>（凭据模型）、<code>core / effect / acp</code>（Agent 内核）、<code>cloud-contracts / cloud-sdk</code>（契约）——全部无前缀</td></tr>
+    <tr><td>线协议不改名</td><td><code>*_SCHEMA_V1</code>、<code>/v1/...</code>、<code>aster_inf_</code> 前缀、<code>secret_ref</code> 格式、operationId、tag、proto 包名与 descriptor 字节一律保持原值</td></tr>
+    <tr><td>依赖方向</td><td>platform 通过 path/git 依赖 <code>../kcl</code>、<code>../kbox/crates/common</code>、<code>../kpower</code>、<code>../ksandbox</code>；aster 反向依赖 platform 的 contracts 与 SDK，<b>不拥有后端源码</b></td></tr>
+  </tbody>
+</table>
+    <p><code>kbox/Cargo.toml</code> 曾登记 <code>kboot / korm / kevent / kflow / kcore / kform-core</code> 等带前缀的历史占位且目录缺失；本设计<b>不沿用这些名字</b>，改为在 <code>platform/crates/</code> 下建立无前缀的职责命名目录。依赖方向仍遵循 <code>kbox/AGENTS.md</code>：内部依赖保持本地 path 且 <code>publish = false</code>。</p>
+
+<h3>5.3 构建、门禁与 Regime 查表制</h3>
+<table>
+  <thead><tr><th style="width:22%">方面</th><th>约定</th></tr></thead>
+  <tbody>
+    <tr><td>依赖单一真源</td><td>Rust <code>[workspace.dependencies]</code> + <code>[patch.crates-io]</code>；Go 单 <code>go.mod</code>；JS 单 lockfile；用 <code>cargo metadata</code> / <code>go list</code> 脚本断言内部依赖全本地解析</td></tr>
+    <tr><td>契约门禁</td><td>OpenAPI 快照、错误码 ↔ i18n 一一对应、URN 注册表 ↔ 路由清单一致性；技术债用 shrink-only 棘轮，禁止改基线换绿灯</td></tr>
+    <tr><td>测试分层</td><td>L1 Sim（单进程 fake）/ L2 多进程 / L3 容器 / L4 云 GPU；hermetic 矩阵按 manifest 分派，真容器 campaign 串行（PG / S3，<code>--test-threads=1</code>）</td></tr>
+    <tr><td>发布</td><td>tag 命名空间 + 通道清单 + 成对 BUILD_ID / SHA256SUMS + 归档成员白名单；通道实现复用 ed25519 签名 index.json 与多源分发</td></tr>
+    <tr><td>证据链</td><td>行为变更写 <code>docs/evidence/&lt;domain&gt;/&lt;date&gt;/OUTCOME.md</code>：命令、计数、Explicitly not claimed；lint 绿灯不等于合规</td></tr>
+  </tbody>
+</table>
+
+<h2>0x06 : 落地路线</h2>
+<table>
+  <thead><tr><th style="width:10%">阶段</th><th style="width:28%">目标</th><th>验收</th></tr></thead>
+  <tbody>
+    <tr><td><span class="tag a">P0</span></td><td>立 contracts 与 Regime 规约；建 platform workspace 与 MaaS 核心 crate 骨架（已落地）；写改名应用器并接 CI；冻结 wire 字符串白名单</td><td>骨架 cargo check / test 全绿；白名单覆盖全部 <code>*_SCHEMA_V1</code></td></tr>
+    <tr><td><span class="tag a">P1</span></td><td>收敛 aster 三处 vendored 副本为单一权威；两套 Vault 模型合并到 vault；drift 降单 lineage</td><td>每个模块全仓唯一；四 workspace 构建全绿</td></tr>
+    <tr><td><span class="tag b">P2</span></td><td>叶子库迁移，双写期 <code>aster-*</code> 与 <code>k-*</code> 别名并存；网关 + 控制面组成最小「一把 Key」闭环</td><td>新旧别名均可解析；CLI / Studio 编译不断</td></tr>
+    <tr><td><span class="tag b">P3</span></td><td>契约与生成物迁移；gateway 改依赖 cloud-sdk；node-agent 与 catalog / distributor 落地，验证计量与审计链</td><td>OpenAPI 与 wire 常量字节一致；账单可按 trace 展开</td></tr>
+    <tr><td><span class="tag b">P4</span></td><td>服务逐个迁（control-plane 五服务 → api → cloud → gateway）；agent-runtime 经 Harness Adapter 接入</td><td>每迁一个，CI 矩阵在新仓跑通再切下一个</td></tr>
+    <tr><td><span class="tag">P5</span></td><td>一刀切：删符号链接、清 exclude 与别名、拆发布通道；全量切流到 Rust MaaS，移除任何 Go 兼容层</td><td>aster 根 workspace 无后端 crate；BUILD_ID 配对不变；依赖图中无 kstack</td></tr>
+    <tr><td><span class="tag">P6</span></td><td>固化「aster 无后端模块」CI 门禁与恢复演练</td><td>门禁能拒绝把后端加回 aster；演练报告归档</td></tr>
+  </tbody>
+</table>
+
+<h2>0x07 : 风险与待决</h2>
+<table>
+  <thead><tr><th style="width:8%">编号</th><th style="width:34%">风险 / 决策</th><th>处置</th></tr></thead>
+  <tbody>
+    <tr><td>R1</td><td>改名误伤线协议字符串</td><td>P0 白名单；应用器只处理 crate 名 / 标识符 / 路径，跳过字符串字面量与 OpenAPI 快照</td></tr>
+    <tr><td>R2</td><td>三处 vendored 副本与三套门禁同时按旧名断言</td><td>P1 先降单 lineage，P2 双写期放宽断言，P5 一次收紧</td></tr>
+    <tr><td>R3</td><td>gateway 按源码文本抓 fixture、CLI/sidecar BUILD_ID 绑定根仓 git tree</td><td>P3 改依赖 SDK 常量；P5 验证配对 ID，必要时改白名单输入</td></tr>
+    <tr><td>R4</td><td>Studio 16 条 path 依赖与 CLI 依赖指向共享库</td><td>aster 保留对 platform 的 git/registry 依赖引用；若要求零依赖，需先重写客户端依赖</td></tr>
+    <tr><td>R5</td><td>Vault 状态机与 receipt 在迁移中丢失，或凭据明文随日志泄露</td><td>vault 保留 sealed/active/revoked、version、receipt；验收明文不落日志、wire、沙箱</td></tr>
+    <tr><td>R6</td><td>Rust MaaS 与 kstack 的功能等价性：模型目录、放置、分发、benchmark、/v1 兼容容易漏项</td><td>以 kstack 公开行为作对照基准逐项写测试；迁移期可双跑对账，但不作为运行时依赖</td></tr>
+    <tr><td>D1</td><td>MaaS 只做必要功能 12 项覆盖的最小集，还是完整对齐 kstack 全部能力</td><td>建议最小集；完整对齐会重新引入功能膨胀，且大量能力（如 335 条管理面 REST）本就不需要</td></tr>
+    <tr><td>D2</td><td>是否接受「aster 不拥有后端源码但保留依赖引用」</td><td>若否，P2 工期翻倍且需先重写 Studio / CLI 依赖</td></tr>
+    <tr><td>D3</td><td><code>apps/api</code> 归档还是丢弃；gateway 迁出后 Studio 内嵌改 git 依赖还是远端调用</td><td>建议归档 + git 依赖，保持 Studio 离线可用</td></tr>
+    <tr><td>R7</td><td>产品品牌词（<code>aster</code>、<code>ASTER_*</code>、<code>.aster/skills</code>、<code>aster-cli-v*</code>）散落在代码、配置与发布脚本，换品牌就要全仓替换</td><td>收进 <code>brand.toml</code>；改名应用器降级为一次性迁移工具；CI 增加「品牌字面量只许出现在 brand.toml 与 packaging/」门禁</td></tr>
+    <tr><td>D4</td><td>是否确认新规划命名<b>完全无前缀</b>、既有仓名保留历史拼写</td><td>建议确认；若连既有仓也要改，需另做一轮仓库级迁移</td></tr>
+  </tbody>
+</table>
+
+<h2>0x08 : 品牌解耦</h2>
+<p><b>结论</b>：能做到「代码与品牌无关」，做不到「系统与品牌无关」。要分三层看，混在一起谈就会既改不干净、又破坏兼容。</p>
+<table>
+  <thead><tr><th style="width:20%">层</th><th style="width:38%">例子</th><th>能否品牌无关</th></tr></thead>
+  <tbody>
+    <tr><td>内部代码标识</td><td>crate / 模块 / 类型 / 变量 / 目录名、环境变量名、内部别名</td><td><b>应该完全无关</b>：用职责命名（<code>boot / orm / event / flow / vault / core</code>），不带任何组织或产品前缀</td></tr>
+    <tr><td>线协议与持久化</td><td>URN、API 路径、schema 常量、表名、凭据前缀、事件 type、proto 包名、receipt 格式、OpenAPI operationId</td><td><b>首次就应中性</b>；已发布的值是兼容契约，只能别名 + 双读单写 + 版本化迁移，不能直接替换</td></tr>
+    <tr><td>外部可见标识</td><td>产品名、CLI 命令、域名、tag 命名空间、安装包名、Bundle ID、证书、用户可见文案、registry namespace</td><td><b>必然相关</b>，但应集中在单一品牌适配层；生态渠道（crates.io / npm / Docker / 应用商店）天然要求唯一 namespace，只能用组织中性的名字</td></tr>
+  </tbody>
+</table>
+<div class="warn">
+  <div class="warn">
+  <p><b>最终决定</b>：连组织 namespace 前缀也不进代码。上一版把 <code>k*</code> 定义为「稳定的组织前缀」，本版进一步去掉它——新规划的 crate、目录、服务、契约一律用职责名；<code>k</code> 只保留在既有 git 仓名（<code>kstack / kbox / kcl / kpower / ksandbox / kstudio / kbuddy</code>）里，且这些仓不改名、不新建同前缀目录，跨仓引用通过中性别名隔离。</p>
+  </div>
+</div>
+
+<h3>8.1 三个落地手段</h3>
+<ol>
+  <li><b>中性别名</b>：内部依赖用职责名指向带 namespace 的包，业务代码里不出现前缀。
+    <pre><code>[workspace.dependencies]
+boot  = { path = "crates/boot"  }
+orm   = { path = "crates/orm"   }
+vault = { path = "crates/vault" }
+</code></pre>
+    现有先例：<code>kbox/Cargo.toml:116</code> 的 <code>kcl = { package = "kense-kcl", path = "../kcl" }</code> 与 <code>:174</code> 的 <code>ktransport = { package = "kcommon", … }</code>；若发布到公共 registry，namespace 只写在 <code>[package] name</code>，依赖侧用 <code>package =</code> 别名，业务代码仍是 <code>use boot::…</code>。</li>
+  <li><b>品牌适配层</b>：<code>brand.toml</code> 单点定义全部产品可见标识，构建期通过 <code>option_env!</code> / <code>build.rs</code> / Rsbuild <code>define</code> 注入；<code>packaging/</code> 负责把它写进安装包、tag、图标与文案。<code>config.kcl</code> 里的 <code>.aster/skills</code>、<code>ASTER_*</code> 环境变量、<code>aster-cli-v*</code> tag 都改为读该配置。</li>
+  <li><b>兼容别名期</b>：历史 wire 值不动，新增中性值；读取时新旧都认，写入只用新值，按版本推进。涉及 <code>aster_inf_</code> 凭据前缀、<code>/v1/api/__local/vault/*</code>、<code>.aster.grok.tools.v1.*</code> proto 包名、<code>ASTER_PAIR_BUILD_ID</code>、<code>openapi/v1.json</code> 的 operationId 与 tag。</li>
+</ol>
+
+<h3>8.2 判定标准与代价</h3>
+<p><b>一句话验收</b>：把公司 / 产品名换掉，需要改几个文件？答案应该是 <b>1 个 <code>brand.toml</code> + 打包脚本</b>，而不是全仓两万处替换（对照 Octop→kbuddy 曾做过 19,574 处替换）。CI 增加门禁：品牌字面量只许出现在 <code>brand.toml</code> 与 <code>packaging/</code>。</p>
+<p><b>必须接受的三个代价</b>：① 已发布 wire 值不能凭空消失，别名期会同时存在新旧两套字符串；② 生态渠道必须有一个组织 namespace，只能做到「中性 + 与产品品牌分离」；③ 改名应用器是一次性迁移工具，不是长期依赖，最终状态是改配置即可发布新品牌。</p>
+<p><b>对落地路线的影响</b>：P0 的「改名应用器」目标从「全量 aster→k」改为「清掉产品品牌词 + 建立 brand.toml + 加品牌字面量门禁」；P3 的 wire 白名单升级为「别名双读单写」；P5 拆分发布通道时，tag 前缀与 latest.json 由 brand.toml 生成。<code>aster</code> 这个仓库名本身可以保留（它是上游仓库的历史名），但仓库内的代码与产物不再依赖它作为品牌。</p>
+
+<div class="foot">
+  本设计为最终整合版，取代此前的分版蓝图与改造计划文档；v1.1 新增 0x08 品牌解耦；v1.2 去掉全部新规划命名的 k 前缀；v2.0 改为全 Rust 实现 MaaS、不再依赖 kstack，并在 platform/ 落地 7 个可编译 crate 骨架。事实基线来自 2026-11-08 对 /Users/roylin/code/aster 的只读调研、对 kstack 当日实证记录（仅作行为对照，源码当前不在本机）以及对 kpower / kbox / kcl / ksandbox 的 Rust 能力盘点。所有目录、命名与阶段为设计建议，待 D1–D3 确认后执行；本文档未改动任何仓库代码。
+</div>
+
+</div>
+</body>
+</html>

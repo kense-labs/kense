@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>kstack 项目改造计划 · aster 后端迁入与 k* 命名</title>
+<style>
+  :root{ --paper:#F8F6F0; --ink:#141413; --clay:#4E60FF; --note:#7A756C;
+    --chalk:#FDFCF9; --line:#DCD6C8; --soft:#EFEBE1; --page:#EDEAE2; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--page);color:var(--ink);
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"PingFang SC","Microsoft YaHei",monospace;
+    font-size:13px;line-height:1.75}
+  .wrap{max-width:1080px;margin:0 auto;padding:40px 28px 90px}
+  header{background:var(--paper);border:1px solid var(--line);border-left:3px solid var(--ink);
+    border-radius:14px;padding:26px 30px;margin-bottom:20px}
+  h1{font-size:21px;font-weight:500;margin:0 0 6px;letter-spacing:-.01em}
+  .sub{font-size:12.5px;color:var(--note);margin:0 0 14px}
+  .meta{font-size:11.5px;color:var(--note);display:flex;gap:18px;flex-wrap:wrap}
+  h2{font-size:15px;font-weight:500;margin:40px 0 14px;padding-top:12px;
+    border-top:1px solid var(--line);letter-spacing:.02em}
+  h3{font-size:13.5px;font-weight:500;margin:24px 0 10px}
+  p{margin:0 0 12px}
+  ul,ol{margin:0 0 14px;padding-left:22px}
+  li{margin:5px 0}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;
+    background:var(--soft);border:1px solid var(--line);border-radius:3px;padding:1px 5px}
+  pre{background:var(--ink);color:var(--chalk);border-radius:8px;padding:14px 16px;
+    overflow-x:auto;font-size:12px;line-height:1.65;margin:0 0 16px}
+  pre code{background:none;border:0;padding:0;color:inherit}
+  table{width:100%;border-collapse:collapse;margin:0 0 18px;font-size:12px}
+  th,td{text-align:left;border-bottom:1px solid var(--line);padding:8px 10px;vertical-align:top}
+  th{background:var(--soft);font-weight:500;color:var(--note);font-size:11px;letter-spacing:.02em}
+  .lead{border-left:3px solid var(--ink);background:var(--paper);padding:14px 18px;border-radius:0 8px 8px 0;margin:0 0 20px}
+  .lead p{margin:0}
+  .warn{border-left:3px solid var(--clay);background:#E9ECFF;padding:12px 16px;border-radius:0 8px 8px 0;margin:0 0 18px}
+  .warn p{margin:0;font-size:12.5px}
+  .tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;margin-right:6px;
+    background:var(--soft);color:var(--note);border:1px solid var(--line)}
+  .tag.t{background:var(--ink);color:var(--chalk);border-color:var(--ink)}
+  .tag.a{background:var(--clay);color:var(--chalk);border-color:var(--clay)}
+  .tag.b{background:transparent;color:var(--ink);border:1px dashed var(--ink)}
+  .diagram{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:14px;margin:0 0 20px;overflow-x:auto}
+  .diagram svg{display:block;min-width:620px;margin:0 auto}
+  .diagram-cap{font-size:11px;color:var(--note);margin:0 0 10px;padding:0 4px;letter-spacing:.02em}
+  .foot{margin-top:48px;padding-top:20px;border-top:1px solid var(--line);font-size:11.5px;color:var(--note)}
+  @media print{body{background:#fff;font-size:11.5px}.wrap{padding:0;max-width:none}h2{page-break-after:avoid}pre,table,.diagram{page-break-inside:avoid}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>kstack 项目改造计划</h1>
+  <p class="sub">把 aster 的后端模块迁入 kense，统一 k* 命名；aster 不再保留任何后端模块</p>
+  <div class="meta">
+    <span>版本 v1.1 · 已废弃</span>
+    <span>2026-11-08</span>
+    <span>范围：只规划，未改动任何仓库代码</span>
+    <span>关联：unified-ai-platform-architecture.html v0.7</span>
+  </div>
+</header>
+
+<div class="warn">
+  <p><b>本计划已废弃</b>：方向改为<b>在 kense 用 Rust 自研 kstack 等效能力，运行时、构建与部署都不再依赖 kstack</b>。最终设计见 <code>ai-os-architecture.html</code> v2.0（全 Rust、无前缀职责命名、后端主仓 <code>platform</code>），并已在 <code>platform/</code> 落地 7 个可编译 crate 骨架。本文的迁移阶段、<code>k*</code> 命名映射与「保留 Go 执行面」前提均已失效，仅作历史记录保留。</p>
+</div>
+
+<div class="lead">
+  <p><b>一句话目标</b>：kense 成为后端源码的唯一权威，按 <code>k*</code> 命名；aster 退化为纯客户端（CLI / Studio / Web / 官网 / packages / plugins）。<b>本轮只输出计划，未复制、重命名或删除任何代码。</b></p>
+</div>
+
+<h2>0x00 : 前提与边界</h2>
+<ul>
+  <li><b>kstack 源码不在本机</b>：<code>/Users/roylin/code/kense/kstack</code> 已不存在，仅 <code>/tmp/kstack-e2e/</code> 留有 5 个 SQLite 运行产物。它是 Go 1.26 的 MaaS 单二进制平台，今早的实证记录已固化在架构蓝图 0x09 / 0x11 / 0x13。<b>改造前须重新检出 <code>kense-labs/kstack</code>，并保持其 Go 执行面独立</b>，不建议把 Rust 后端塞进它。</li>
+  <li><b>kense 不是单仓</b>：无根 Cargo.toml，是 6 个独立 git 仓（kbox / kcl / kpower / ksandbox / kstudio / kbuddy）+ 根 justfile（只转发到 kbuddy）。各仓自带 Cargo.toml 与 lockfile。</li>
+  <li><b>aster 是 4 个 workspace</b>：根 workspace（约 180 crate）+ <code>apps/cloud</code>、<code>apps/api</code>、<code>apps/control-plane</code> 三个独立 workspace（根 Cargo.toml 显式 exclude），各带 Cargo.lock；另有 5 个 git submodule 与 5 个符号链接。</li>
+  <li><b>「不再保留任何后端模块」的工程解释</b>：aster 不再拥有后端模块的<b>源码权威</b>，但必须保留对 kense 新仓的 <b>git / registry 依赖引用</b>。原因是 <code>apps/studio/src-tauri</code> 有 16 条 path 依赖、<code>apps/aster</code> CLI 有多条 path 依赖指向这些共享库；若字面意义上全部删掉，留下的客户端立即编译失败。此项列为待确认决策 D3。</li>
+</ul>
+
+<h2>0x01 : 现状盘点</h2>
+<h3>1.1 kense 已有 k* 项目与迁移先例</h3>
+<table>
+  <thead><tr><th style="width:14%">项目</th><th style="width:22%">形态</th><th>与 aster 的关系 / 状态</th></tr></thead>
+  <tbody>
+    <tr><td><code>kbox</code></td><td>Rust workspace，18 members</td><td><b>已完成迁移</b>：aster <code>box / oci-runtime / runtime</code> → <code>kbox-*</code> / <code>koci-*</code> / <code>kbox-contract</code> / <code>kcommon</code></td></tr>
+    <tr><td><code>kcl</code></td><td>单 crate，<code>kense-kcl</code> 0.3.0</td><td><b>已完成迁移</b>：aster-acl → kense-kcl（<code>kbox/dist/RELEASE_NOTES.md</code> 有记录，保留 <code>parse_acl</code> 兼容别名）</td></tr>
+    <tr><td><code>kpower</code></td><td>单 crate 0.11.0</td><td><b>已完成迁移</b>：aster-power（其 <code>magnitude/inference</code> 子 workspace 同名）</td></tr>
+    <tr><td><code>ksandbox</code></td><td>单 crate 0.2.3</td><td><b>已完成迁移</b>：aster-sandbox；aster <code>crates/code/core</code> 现已反向 git 依赖 <code>kense-labs/ksandbox</code></td></tr>
+    <tr><td><code>kstudio</code></td><td>Rust workspace，3 members</td><td>GPUI 桌面控制台，参考 aster Studio 但不同栈；<b>非同源</b></td></tr>
+    <tr><td><code>kbuddy</code></td><td>Python / FastAPI + Rsbuild + Tauri</td><td>源自 Octop，<b>非同源</b></td></tr>
+    <tr><td><code>runtime</code></td><td>Python 测试台</td><td>kbox CLI → HTTP 适配器，非后端产品</td></tr>
+  </tbody>
+</table>
+<div class="warn">
+  <p><b>最重要的基线</b>：<code>kbox/Cargo.toml:116-135</code> 的 <code>[workspace.dependencies]</code> 已登记 <code>kboot / korm / kevent / kflow / kcore / kform-core / ktransport</code> 等别名，但对应目录 <code>kbox/crates/</code> 下并不存在 —— 这些是<b>悬空的命名占位</b>。本次改造就是把它们补齐，而不是另起一套命名。</p>
+</div>
+
+<h3>1.2 aster 后端模块分布</h3>
+<table>
+  <thead><tr><th style="width:24%">组</th><th>内容</th><th style="width:16%">处置</th></tr></thead>
+  <tbody>
+    <tr><td>根 workspace 基础库</td><td><code>crates/{boot,orm,event,flow,acl,runtime,common,sag,lane,memory,search,vec,okf,embedding,bge,deepseek,sms,sentry,updater,form-core,apofasi,use/*,ocr,office,power,code/core,code/acp,effect}</code></td><td>迁（除已完成项）</td></tr>
+    <tr><td>根 workspace 服务</td><td><code>apps/gateway</code>（aster-gateway 1.1.1，唯一边缘，Studio 内嵌）</td><td>迁</td></tr>
+    <tr><td><code>apps/cloud</code>（submodule）</td><td>24 members：contracts / control-plane / node-agent / sdk / auth + vendored 基础库</td><td>迁</td></tr>
+    <tr><td><code>apps/api</code>（submodule）</td><td>根包 aster-api + 14 members（auth / billing / config / boot / event / flow / orm / use-* …），git 依赖 aster-cloud-sdk</td><td>迁（归档，见 D4）</td></tr>
+    <tr><td><code>apps/control-plane</code></td><td>5 个服务 bin：auth / billing / config / gateway-runtime / runner；<b>gateway-runtime 内含 <code>vault.rs</code> 上游凭据 Vault 模型</b></td><td>迁</td></tr>
+    <tr><td>cloud 凭据模型</td><td><code>apps/cloud/migrations</code> 下 14 个 secrets / credentials 迁移（013 / 017 / 056 / 071 / 110 / 111 / 196 / 197 / 204 / 227 / 228 / 234 / 244 / 247）</td><td>迁</td></tr>
+    <tr><td>符号链接</td><td><code>apps/{auth,billing,config,runtime,runner} → control-plane/*</code></td><td>删除</td></tr>
+    <tr><td>非 Rust 后端</td><td><code>apps/use-registry</code>（TUF 签名发布仓）</td><td>迁 / 归档</td></tr>
+    <tr><td>留在 aster</td><td><code>apps/aster</code> CLI、<code>apps/studio</code>、<code>apps/web</code>、<code>apps/dashboard</code>、<code>apps/tutorial-agent</code>、<code>packages/*</code>、<code>plugins/*</code>、<code>crates/{capture,browser,terminal TUI,third-party}</code>；<b>Studio <code>knowledge_vault.rs</code> 是知识目录、非凭据 Vault，勿误迁</b></td><td>不迁</td></tr>
+  </tbody>
+</table>
+<p><b>三处 vendored 副本</b>：<code>aster-boot / orm / event / flow / acl / lane</code> 在根 crates、apps/cloud/crates、apps/api/crates 各一份；<code>aster-auth</code> 三份；<code>billing / config</code> 两份。<b>同名异物</b>：<code>aster-config</code> 既是服务端配置服务、又是 <code>crates/terminal/crates/codegen</code> 的 CLI 配置；<code>aster-auth</code>、<code>aster-runtime</code> 同理。收敛必须先于改名。</p>
+
+<h2>0x02 : 目标形态</h2>
+<div class="diagram">
+  <p class="diagram-cap">迁移后的仓库组织　/　后端源码权威集中，已有 k* 仓保持独立</p>
+<svg viewBox="0 0 680 400" width="100%" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>迁移后的仓库组织</title>
+<desc>aster 只保留客户端；新建后端主仓承载基础库、契约与服务；已有 k 星仓与 Go 版 kstack 作为独立执行面被依赖。</desc>
+<defs>
+  <marker id="planA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </marker>
+</defs>
+<rect x="0" y="0" width="680" height="400" rx="14" fill="#F8F6F0"/>
+<g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">
+<rect x="130" y="24" width="420" height="50" rx="8" fill="#FDFCF9" stroke="#7A756C" stroke-width="0.9"/>
+<text x="340" y="44" font-size="12.5" fill="#141413" text-anchor="middle">aster · 仅客户端</text>
+<text x="340" y="62" font-size="11" fill="#7A756C" text-anchor="middle">CLI · Studio · Web · packages · plugins</text>
+<path d="M340 74 L340 100" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#planA)"/>
+<rect x="30" y="102" width="620" height="48" rx="8" fill="#4E60FF"/>
+<text x="340" y="122" font-size="12.5" fill="#FDFCF9" text-anchor="middle">kserve · 后端主仓</text>
+<text x="340" y="140" font-size="11" fill="#FDFCF9" text-anchor="middle">Rust workspace · 唯一后端源码权威</text>
+<path d="M340 150 L340 170 M125 170 L555 170 M125 170 L125 188 M340 170 L340 188 M555 170 L555 188" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#planA)"/>
+<rect x="30" y="190" width="190" height="58" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="125" y="212" font-size="12.5" fill="#141413" text-anchor="middle">基础库</text>
+<text x="125" y="230" font-size="11" fill="#7A756C" text-anchor="middle">kboot · korm · kevent · kflow</text>
+<rect x="245" y="190" width="190" height="58" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="340" y="212" font-size="12.5" fill="#141413" text-anchor="middle">契约</text>
+<text x="340" y="230" font-size="11" fill="#7A756C" text-anchor="middle">kcloud-contracts · openapi</text>
+<rect x="460" y="190" width="190" height="58" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="555" y="212" font-size="12.5" fill="#141413" text-anchor="middle">服务</text>
+<text x="555" y="230" font-size="11" fill="#7A756C" text-anchor="middle">kauthd · kgateway · kcloud-*</text>
+<path d="M340 248 L340 272" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#planA)"/>
+<rect x="30" y="274" width="300" height="58" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="180" y="296" font-size="12.5" fill="#141413" text-anchor="middle">已有独立仓</text>
+<text x="180" y="314" font-size="11" fill="#7A756C" text-anchor="middle">kbox · kcl · kpower · ksandbox</text>
+<rect x="350" y="274" width="300" height="58" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="500" y="296" font-size="12.5" fill="#141413" text-anchor="middle">kstack · MaaS 执行面</text>
+<text x="500" y="314" font-size="11" fill="#7A756C" text-anchor="middle">Go · 重新检出 · 保持独立</text>
+<rect x="130" y="344" width="420" height="40" rx="8" fill="#141413"/>
+<text x="340" y="368" font-size="12.5" fill="#FDFCF9" text-anchor="middle">aster 仅保留对 kserve 的依赖引用</text>
+</g>
+</svg>
+</div>
+<p><b>建议新建一个后端主仓</b>（暂名 <code>kserve</code>），而不是塞进 kbox 或 kpower —— 后两者有各自的 workspace 与发布节奏，且 <code>kstack</code> 是 Go 执行面，三者混仓会重演 aster 四 workspace 的复杂度。仓内按 <code>crates/</code>（基础库）、<code>contracts/</code>（契约与 OpenAPI）、<code>services/</code>（服务 bin）组织，一个 workspace、一份 Cargo.lock。<b>凭据保管独立为 <code>kvault</code></b>，不并入 gateway，也不与 Studio 的 knowledge_vault 混淆。</p>
+
+<h2>0x03 : 命名规则与完整映射</h2>
+<p><b>规则</b>：① 去掉 <code>aster-</code> / <code>aster-use-</code> 前缀，统一 <code>k</code> 前缀（用户示例 <code>aster-boot → kboot</code>）；② 服务端可执行包加 <code>d</code> 或 <code>-svc</code> 后缀，避免与同名 CLI 库冲突；③ 同名异物用限定名区分；④ <b>线协议字符串值（<code>*_SCHEMA_V1</code>、<code>/v1/...</code> 路径、operationId、tag）一律不改</b>，只改 crate 名与 Rust 标识符；⑤ 已占用名字不复用，已完成迁移的不再新建。</p>
+
+<h3>3.1 基础库（补齐 kbox 已预留的占位）</h3>
+<table>
+  <thead><tr><th style="width:32%">aster 原名</th><th style="width:22%">k* 新名</th><th>说明</th></tr></thead>
+  <tbody>
+    <tr><td><code>aster-boot</code> / <code>aster-boot-macros</code></td><td><code>kboot</code> / <code>kboot-macros</code></td><td>kbox/Cargo.toml 已登记占位，优先补齐</td></tr>
+    <tr><td><code>aster-orm</code></td><td><code>korm</code></td><td>已登记占位</td></tr>
+    <tr><td><code>aster-event</code></td><td><code>kevent</code></td><td>已登记占位</td></tr>
+    <tr><td><code>aster-flow</code></td><td><code>kflow</code></td><td>已登记占位</td></tr>
+    <tr><td><code>aster-core</code>（crates/code/core）</td><td><code>kcore</code></td><td>已登记占位</td></tr>
+    <tr><td><code>aster-form-core</code></td><td><code>kform-core</code></td><td>已登记占位</td></tr>
+    <tr><td><code>aster-effect</code></td><td><code>keffect</code></td><td>Fact Log / 带键幂等转移</td></tr>
+    <tr><td><code>aster-acp</code></td><td><code>kacp</code></td><td>ACP sidecar，作为 agent-runtime 迁入</td></tr>
+    <tr><td><code>aster-sag</code> / <code>aster-lane</code></td><td><code>ksag</code> / <code>klane</code></td><td>检索实体 / 优先级队列</td></tr>
+    <tr><td><code>aster-durable-memory</code> / <code>aster-search</code> / <code>aster-vec</code></td><td><code>kmemory</code> / <code>ksearch</code> / <code>kvec</code></td><td>共享库，被 CLI 与 Studio 复用</td></tr>
+    <tr><td><code>aster-okf</code> / <code>aster-embedding</code> / <code>aster-apofasi</code></td><td><code>kokf</code> / <code>kembedding</code> / <code>kapofasi</code></td><td>共享库</td></tr>
+    <tr><td><code>aster-use-bge</code> / <code>aster-deepseek</code> / <code>aster-sms</code> / <code>aster-sentry</code></td><td><code>kbge</code> / <code>kdeepseek</code> / <code>ksms</code> / <code>ksentry</code></td><td>叶子库，先迁</td></tr>
+    <tr><td><code>aster-use</code> 系列 / <code>aster-use-ocr</code> / <code>aster-office-*</code></td><td><code>kuse*</code> / <code>kocr</code> / <code>koffice-*</code></td><td>与 CLI codegen 交织，按依赖逐个切</td></tr>
+    <tr><td><code>aster-updater</code></td><td><b>留 aster</b></td><td>CLI 自更新，非后端</td></tr>
+  </tbody>
+</table>
+
+<h3>3.2 契约与服务</h3>
+<table>
+  <thead><tr><th style="width:32%">aster 原名</th><th style="width:22%">k* 新名</th><th>说明</th></tr></thead>
+  <tbody>
+    <tr><td><code>aster-cloud-contracts</code></td><td><code>kcloud-contracts</code></td><td><code>*_SCHEMA_V1</code> 与 <code>/v1/...</code> 字符串值原样保留</td></tr>
+    <tr><td><code>aster-cloud-sdk</code></td><td><code>kcloud-sdk</code></td><td>统一 git URL（见风险 R1）</td></tr>
+    <tr><td><code>aster-cloud-control-plane</code></td><td><code>kcloud-control-plane</code></td><td>控制面主服务</td></tr>
+    <tr><td><code>aster-cloud-node-agent</code></td><td><code>kcloud-node-agent</code></td><td>节点代理</td></tr>
+    <tr><td><code>aster-auth</code>（服务）</td><td><code>kauthd</code></td><td>与 codegen/aster-auth 区分</td></tr>
+    <tr><td><code>aster-billing</code></td><td><code>kbilling</code></td><td>商业账本与 usage ledger 双轨</td></tr>
+    <tr><td><code>aster-config</code>（服务）</td><td><code>kconfigd</code></td><td>与 CLI codegen/aster-config 区分</td></tr>
+    <tr><td><code>aster-gateway-runtime</code></td><td><code>kgateway-runtime</code></td><td>不叫 kruntime（已被 kbox-contract 语义占用）</td></tr>
+    <tr><td><code>runtime/src/vault.rs</code> + cloud 凭据表</td><td><code>kvault</code></td><td><b>本次补漏</b>：VaultScope / sealed→active→revoked / secret_ref 版本 / receipt / loopback API；cloud 的 secrets·credentials 数据模型一并归入</td></tr>
+    <tr><td><code>aster-runner</code></td><td><code>krunner</code></td><td>跑 kbox MicroVM</td></tr>
+    <tr><td><code>aster-gateway</code></td><td><code>kgateway</code></td><td>唯一边缘，迁（Studio 内嵌依赖需改 git）</td></tr>
+    <tr><td><code>aster-api</code>（+ 14 members）</td><td><code>kapi</code>（归档）</td><td>桌面扩展面，迁但不启用（决策 D4）</td></tr>
+    <tr><td><code>apps/use-registry</code></td><td><code>kregistry</code></td><td>TUF 签名发布仓，非 Rust crate</td></tr>
+    <tr><td><code>openapi/v1.json</code></td><td>随契约迁入</td><td>403 paths / 29 tags 快照，生成脚本同步迁</td></tr>
+  </tbody>
+</table>
+
+<h3>3.3 已占用名字与冲突处理</h3>
+<table>
+  <thead><tr><th style="width:22%">名字</th><th style="width:30%">现状</th><th>处置</th></tr></thead>
+  <tbody>
+    <tr><td><code>kpower</code> / <code>ksandbox</code> / <code>kbox</code></td><td>已完成迁移，独立仓</td><td><b>不新建、不重复迁</b>，改 path/git 依赖指向现有仓</td></tr>
+    <tr><td><code>kcommon</code></td><td><code>kbox/crates/common</code> 已用</td><td><code>aster-common</code>（transport 别名）合并进该 crate，不新建</td></tr>
+    <tr><td><code>kcl</code>（<code>kense-kcl</code>）</td><td>aster-acl 已迁入</td><td><b>不要再建 kacl</b>；kacl 是已废弃旧名</td></tr>
+    <tr><td><code>kbox-contract</code></td><td>aster-runtime 已迁入</td><td><b>不要再建 kruntime</b>；<code>aster-gateway-runtime</code> 用 kgateway-runtime</td></tr>
+    <tr><td><code>kstudio</code> / <code>kbuddy</code></td><td>独立仓，非同源</td><td>不动</td></tr>
+    <tr><td><code>kgateway</code> / <code>kcloud</code></td><td>仅内部服务代号 / 测试 fixture 值</td><td>可用，但需先做一次全仓命名冲突审计</td></tr>
+    <tr><td><code>kvault</code></td><td>未被 crate 占用（Studio 仅有 knowledge_vault 知识目录）</td><td>可用；须与 Studio knowledge_vault 概念区分</td></tr>
+    <tr><td><code>kruntime</code> / <code>koci-kruntime</code></td><td>历史 crate / 证据目录名</td><td>避免复用，改用限定名</td></tr>
+    <tr><td><code>kboot/korm/kevent/kflow/kcore/kform-core</code></td><td>kbox/Cargo.toml 悬空占位</td><td><b>按占位补齐</b>，目录落在 kserve/crates/</td></tr>
+  </tbody>
+</table>
+
+<h2>0x04 : 分阶段改造计划</h2>
+<p>每一阶段的验收门槛相同：<b>四个 workspace 的 <code>cargo check --locked --workspace</code> 全绿 + backend.yml 矩阵全绿</b>，否则不得进入下一阶段。</p>
+<table>
+  <thead><tr><th style="width:9%">阶段</th><th style="width:20%">目标</th><th>动作</th><th style="width:24%">验收</th></tr></thead>
+  <tbody>
+    <tr><td><span class="tag a">P0</span></td><td>准备与止血</td><td>重新检出 kstack（Go MaaS 执行面）；新建 <code>kserve</code> 仓与 Regime 规约；统一 <code>.gitmodules</code> 的 cloud 与 <code>apps/api</code> 的 SDK git URL 到同一 org；把 <code>scripts/brand-rename-*.tsv</code> 从空操作改为 <code>aster-*→k*</code> 映射并<b>写应用器 + 单测 + 接入 CI</b>；冻结线协议字符串白名单</td><td>改名应用器可对单个 crate 做 dry-run 并产出差异清单；白名单覆盖全部 <code>*_SCHEMA_V1</code> 与 <code>/v1/</code> 常量</td></tr>
+    <tr><td><span class="tag a">P1</span></td><td>先收敛副本</td><td>在 kserve 建立 <code>kboot/korm/kevent/kflow/kauthd/kbilling/kconfigd</code> 单一权威；删除 apps/api 与 apps/cloud 的 vendored 副本，改为 path/git 依赖；<code>crate_drift_report.py</code> 从三 lineage 降为单 lineage 并重刷 baseline；5 个符号链接暂留；<b>两套 Vault 模型（runtime/vault.rs 与 cloud 凭据表）统一收敛到 kvault</b></td><td>每个模块全仓只剩一份源码；drift 计数为 0；四 workspace 构建全绿</td></tr>
+    <tr><td><span class="tag b">P2</span></td><td>叶子库迁移</td><td>按依赖顺序迁 <code>kcommon→kboot→korm→kevent→kflow→kform-core→kcore→keffect→kacp</code> 及其余叶子库；根 <code>[workspace.dependencies]</code> <b>双写期</b>：新增 <code>k-*</code> 别名、保留 <code>aster-*</code> 旧名指向同一包；临时放宽 <code>workspace_dependencies.py</code> 的 <code>startswith("aster-")</code> 断言</td><td>新旧别名可同时解析；CLI / Studio 编译不断</td></tr>
+    <tr><td><span class="tag b">P3</span></td><td>契约与生成物</td><td>迁 <code>kcloud-contracts</code>（<code>*_SCHEMA_V1</code> 值不动）、<code>openapi/v1.json</code> 与生成脚本、<code>kcloud-sdk</code>、<code>aster-proto-build</code>；修复 gateway <code>cloud_ingest.rs:498</code> 的 <code>include_str!</code> 源码抓取 fixture，改为依赖 SDK 常量；CLI codegen 的下载 pin 与 proto 包名本期不动；<code>secret_ref / version / receipt</code> 与 <code>aster_inf_</code> 前缀列入 wire 不改名白名单</td><td>OpenAPI 快照字节一致；wire 常量快照比对通过；gateway usage 单测全绿</td></tr>
+    <tr><td><span class="tag b">P4</span></td><td>服务逐个迁</td><td>顺序：control-plane 五服务（kauthd/kbilling/kconfigd/kgateway-runtime/krunner）→ kapi → kcloud-control-plane / node-agent → kgateway；逐个改 <code>.github/workflows/backend.yml</code> 的 <code>-p</code> 与 <code>--manifest-path</code>、checkout action 的 org；Studio 内嵌 gateway 改为 git 依赖；vault 的 loopback-only 约束、receipt 持久化与 PG 凭据表约束随迁</td><td>每迁一个服务，backend.yml 对应矩阵在新仓跑通后再切下一个</td></tr>
+    <tr><td><span class="tag">P5</span></td><td>一刀切与解耦</td><td>删 5 个符号链接、删根 Cargo.toml 的 <code>aster-*</code> 别名与失效 <code>exclude</code>、注销 cloud/api submodule、<code>default-members</code> 改为 <code>["apps/aster"]</code>；CI token 与 docs/release-governance 拆分；新建 <code>k-*-v*</code> tag 通道，不占 aster 的 Latest；验证 <code>ASTER_PAIR_BUILD_ID</code> 不受后端迁出影响</td><td>aster 根 workspace 无任何 server bin / cloud / api / control-plane 成员；CLI/sidecar BUILD_ID 配对不变</td></tr>
+    <tr><td><span class="tag">P6</span></td><td>门禁固化</td><td>在 aster CI 新增「无后端模块」检查：根 Cargo.toml 不得含服务 bin 与云侧路径、不得有 <code>aster-cloud-*</code> / <code>aster-boot</code> 等后端 crate 成员；在 kserve 建 Regime 查表制、依赖单一真源、shrink-only 棘轮与发布防串味</td><td>门禁能主动拒绝把后端 crate 加回 aster；两仓发布通道互不串味</td></tr>
+  </tbody>
+</table>
+
+<h2>0x05 : 风险与缓解</h2>
+<table>
+  <thead><tr><th style="width:8%">编号</th><th style="width:34%">风险</th><th>缓解</th></tr></thead>
+  <tbody>
+    <tr><td>R1</td><td><code>aster-cloud-sdk</code> 的 git URL 双 org 不一致：<code>.gitmodules</code> 是 <code>aster-ai-lab/cloud.git</code>，<code>apps/api/Cargo.toml:64</code> 是 <code>kense-labs/cloud.git</code></td><td>P0 统一到 kense-labs，并把所有内部依赖改为 path 或统一 git rev</td></tr>
+    <tr><td>R2</td><td><code>*_SCHEMA_V1</code> / <code>/v1/...</code> 线协议字符串被改名工具误改，造成跨仓 wire 不兼容</td><td>P0 建字符串白名单，改名应用器只处理 crate 名 / Rust 标识符 / 路径，跳过字符串字面量与 OpenAPI 快照</td></tr>
+    <tr><td>R3</td><td>gateway <code>usage/cloud_ingest.rs:498</code> 用 <code>include_str!</code> 按源码文本抓 fixture，contracts 迁走后与真源分叉</td><td>P3 改为依赖 <code>kcloud-sdk</code> 常量，删除镜像 fixture</td></tr>
+    <tr><td>R4</td><td>三套门禁同时按 <code>aster-</code> 前缀与三 lineage 路径断言（<code>workspace_dependencies.py</code>、<code>crate_drift_report.py</code>、backend.yml），过早切换会三仓齐红</td><td>P1 先降为单 lineage，P2 双写期放宽断言，P5 一次性收紧，每阶段全绿再进</td></tr>
+    <tr><td>R5</td><td><code>ASTER_PAIR_BUILD_ID</code> 绑定 aster 根仓 git tree，后端迁出会改变 CLI / sidecar 配对 ID</td><td>P5 收尾验证；必要时把配对输入从「根仓全量 git ls-files」改为「CLI 相关路径白名单」</td></tr>
+    <tr><td>R6</td><td>Studio 有 16 条 path 依赖、CLI 有多条指向共享库；「一个后端都不留」字面执行会编译断</td><td>采用 0x00 的工程解释（保留依赖引用），P2 双写期过渡；此项需 D3 确认</td></tr>
+    <tr><td>R7</td><td>Vault 模型被当成普通 KMS 一行带过：sealed / active / revoked 状态、secret_ref 版本与 receipt 丢失，或凭据明文随日志与审计泄露</td><td>在 kserve 建 <code>kvault</code> 独立领域模型；<code>secret_ref / version / receipt</code> 列入不改名白名单；验收「明文不落日志、wire 与沙箱」</td></tr>
+  </tbody>
+</table>
+
+<h2>0x06 : 验收标准与明确不做</h2>
+<h3>6.1 完成的定义</h3>
+<ol>
+  <li>aster 根 Cargo.toml 的 <code>exclude</code> 清空（或只剩非后端项），<code>default-members</code> 仅含客户端；root / api / cloud / control-plane 四个 workspace 中不再有任何 server bin 或云侧服务源码。</li>
+  <li>kserve 单仓拥有全部后端源码权威，每个模块全仓唯一；<code>cargo check --locked --workspace</code> 与 backend.yml 矩阵全绿。</li>
+  <li>线协议常量、OpenAPI 快照、CLI/sidecar BUILD_ID 配对与迁移前字节一致。</li>
+  <li>新增 CI 门禁能主动拒绝把后端 crate 加回 aster；两仓 tag 通道与 latest.json 互不串味。</li>
+  <li>kstack（Go）重新检出并保持 MaaS 执行面独立，通过契约与 kserve 交互，不被改名波及。</li>
+  <li><code>kvault</code> 具备三层 Scope、sealed / active / revoked 状态机、版本化凭据与可审计 receipt；明文不落日志、审计事件、wire 与沙箱。</li>
+</ol>
+<h3>6.2 明确不做</h3>
+<ul>
+  <li><b>不统一语言</b>：kstack 保持 Go，kserve 是 Rust；不把 Go 代码迁成 Rust，也不把 Rust 后端塞进 kstack 仓。</li>
+  <li><b>不改线协议</b>：<code>*_SCHEMA_V1</code>、<code>/v1/...</code> 路径、operationId、tag、proto 包名与 descriptor 字节保持原样。</li>
+  <li><b>不合并已有仓</b>：kbox / kcl / kpower / ksandbox / kstudio / kbuddy 各自独立，保持现有 workspace 与发布节奏。</li>
+  <li><b>不迁客户端</b>：CLI、Studio、Web、官网、dashboard、tutorial-agent、packages、plugins、TUI 与 third-party vendored 全部留在 aster。</li>
+  <li><b>本轮不执行</b>：未复制、未重命名、未删除任何仓库代码；所有动作待计划确认后按阶段执行。</li>
+</ul>
+
+<h2>0x07 : 待确认决策</h2>
+<table>
+  <thead><tr><th style="width:8%">编号</th><th style="width:30%">决策</th><th>影响</th></tr></thead>
+  <tbody>
+    <tr><td>D1</td><td>后端主仓命名：<code>kserve</code>（推荐，避免与 Go 版 kstack 冲突）还是重建 <code>kstack</code> 为新主仓？</td><td>决定目录、git remote、tag 命名空间与全部 path 依赖</td></tr>
+    <tr><td>D2</td><td>kstack 是否重新检出并保持 Go MaaS 执行面独立？</td><td>若并入 kserve，需先定 Go/Rust 边界与通信契约，工作量显著增加</td></tr>
+    <tr><td>D3</td><td>接受「aster 不再拥有后端源码，但保留对 kserve 的依赖引用」这一解释吗？</td><td>若要求字面意义的零依赖，必须先重写 Studio 的 16 条 path 依赖与 CLI 依赖，P2 工期翻倍</td></tr>
+    <tr><td>D4</td><td><code>apps/api</code>（桌面扩展面）迁入后归档不启用，还是直接丢弃？</td><td>影响是否保留 kapi 与 14 个 members 的历史代码</td></tr>
+    <tr><td>D5</td><td><code>apps/gateway</code> 整体迁到 kserve 后，Studio 内嵌部分改为 git 依赖还是改为调用远端服务？</td><td>影响 Studio 离线可用性与 P4 切换方式</td></tr>
+  </tbody>
+</table>
+
+<div class="foot">
+  本计划基于 2026-11-08 对 /Users/roylin/code/aster 与 /Users/roylin/code/kense 的只读调研，以及当日对 kstack 的实证记录（源码当前不在本机）。所有阶段、命名与验收标准为建议，待 D1–D5 确认后细化。关联文档：unified-ai-platform-architecture.html v0.8（0x14 Vault 凭据模型）。v1.1 补入此前遗漏的 Vault 领域模型：模块清单、kvault 命名映射、目标形态、P1/P3/P4 阶段、R7 风险与验收。
+</div>
+
+</div>
+</body>
+</html>

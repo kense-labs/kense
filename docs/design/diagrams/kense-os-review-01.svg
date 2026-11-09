@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 680 250" width="680" height="250" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>Supply-chain feedback loop broken in the module atlas</title>
+<desc>Actions to Packages to Releases to TaaS to MaaS to AaaS/SaaS, with the production-trace feedback edge back to TaaS missing from all sixteen module diagrams.</desc>
+<defs><marker id="kense-os-review-01-rvA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#141413" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker><marker id="kense-os-review-01-rvB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#4E60FF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<rect x="0" y="0" width="680" height="250" rx="14" fill="#F8F6F0"/>
+<g font-family="Menlo, SFMono-Regular, Consolas, monospace">
+<rect x="18" y="56" width="100" height="48" rx="6" fill="#141413"/>
+<text x="68" y="85" font-size="11" fill="#FDFCF9" text-anchor="middle">Actions</text>
+<path d="M118 80 L126 80" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#kense-os-review-01-rvA)"/>
+<rect x="126" y="56" width="100" height="48" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="1.2"/>
+<text x="176" y="85" font-size="11" fill="#141413" text-anchor="middle">Packages</text>
+<path d="M226 80 L234 80" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#kense-os-review-01-rvA)"/>
+<rect x="234" y="56" width="100" height="48" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="1.2"/>
+<text x="284" y="85" font-size="11" fill="#141413" text-anchor="middle">Releases</text>
+<path d="M334 80 L342 80" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#kense-os-review-01-rvA)"/>
+<rect x="342" y="56" width="100" height="48" rx="6" fill="#141413"/>
+<text x="392" y="85" font-size="11" fill="#FDFCF9" text-anchor="middle">TaaS</text>
+<path d="M442 80 L450 80" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#kense-os-review-01-rvA)"/>
+<rect x="450" y="56" width="100" height="48" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="1.2"/>
+<text x="500" y="85" font-size="11" fill="#141413" text-anchor="middle">MaaS</text>
+<path d="M550 80 L558 80" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#kense-os-review-01-rvA)"/>
+<rect x="558" y="56" width="100" height="48" rx="6" fill="#FDFCF9" stroke="#4E60FF" stroke-width="1.2"/>
+<text x="608" y="85" font-size="11" fill="#141413" text-anchor="middle">AaaS / SaaS</text>
+<path d="M626 104 L626 158 L194 158 L194 106" fill="none" stroke="#4E60FF" stroke-width="1.2" stroke-dasharray="6 4" marker-end="url(#kense-os-review-01-rvB)"/>
+<rect x="196" y="140" width="330" height="36" rx="6" fill="#4E60FF"/>
+<text x="361" y="162" font-size="11" fill="#FDFCF9" text-anchor="middle">FEEDBACK EDGE HAS NO PRODUCER IN THE ATLAS</text>
+<text x="340" y="208" font-size="11" fill="#7A756C" text-anchor="middle">production traces + new benchmark → new dataset → TaaS (blueprint 0x07)</text>
+</g></svg>

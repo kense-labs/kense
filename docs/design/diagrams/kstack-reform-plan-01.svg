@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 680 400" width="100%" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>迁移后的仓库组织</title>
+<desc>aster 只保留客户端；新建后端主仓承载基础库、契约与服务；已有 k 星仓与 Go 版 kstack 作为独立执行面被依赖。</desc>
+<defs>
+  <marker id="kstack-reform-plan-01-planA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </marker>
+</defs>
+<rect x="0" y="0" width="680" height="400" rx="14" fill="#F8F6F0"/>
+<g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">
+<rect x="130" y="24" width="420" height="50" rx="8" fill="#FDFCF9" stroke="#7A756C" stroke-width="0.9"/>
+<text x="340" y="44" font-size="12.5" fill="#141413" text-anchor="middle">aster · 仅客户端</text>
+<text x="340" y="62" font-size="11" fill="#7A756C" text-anchor="middle">CLI · Studio · Web · packages · plugins</text>
+<path d="M340 74 L340 100" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#kstack-reform-plan-01-planA)"/>
+<rect x="30" y="102" width="620" height="48" rx="8" fill="#4E60FF"/>
+<text x="340" y="122" font-size="12.5" fill="#FDFCF9" text-anchor="middle">kserve · 后端主仓</text>
+<text x="340" y="140" font-size="11" fill="#FDFCF9" text-anchor="middle">Rust workspace · 唯一后端源码权威</text>
+<path d="M340 150 L340 170 M125 170 L555 170 M125 170 L125 188 M340 170 L340 188 M555 170 L555 188" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#kstack-reform-plan-01-planA)"/>
+<rect x="30" y="190" width="190" height="58" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="125" y="212" font-size="12.5" fill="#141413" text-anchor="middle">基础库</text>
+<text x="125" y="230" font-size="11" fill="#7A756C" text-anchor="middle">kboot · korm · kevent · kflow</text>
+<rect x="245" y="190" width="190" height="58" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="340" y="212" font-size="12.5" fill="#141413" text-anchor="middle">契约</text>
+<text x="340" y="230" font-size="11" fill="#7A756C" text-anchor="middle">kcloud-contracts · openapi</text>
+<rect x="460" y="190" width="190" height="58" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="555" y="212" font-size="12.5" fill="#141413" text-anchor="middle">服务</text>
+<text x="555" y="230" font-size="11" fill="#7A756C" text-anchor="middle">kauthd · kgateway · kcloud-*</text>
+<path d="M340 248 L340 272" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#kstack-reform-plan-01-planA)"/>
+<rect x="30" y="274" width="300" height="58" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="180" y="296" font-size="12.5" fill="#141413" text-anchor="middle">已有独立仓</text>
+<text x="180" y="314" font-size="11" fill="#7A756C" text-anchor="middle">kbox · kcl · kpower · ksandbox</text>
+<rect x="350" y="274" width="300" height="58" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="500" y="296" font-size="12.5" fill="#141413" text-anchor="middle">kstack · MaaS 执行面</text>
+<text x="500" y="314" font-size="11" fill="#7A756C" text-anchor="middle">Go · 重新检出 · 保持独立</text>
+<rect x="130" y="344" width="420" height="40" rx="8" fill="#141413"/>
+<text x="340" y="368" font-size="12.5" fill="#FDFCF9" text-anchor="middle">aster 仅保留对 kserve 的依赖引用</text>
+</g>
+</svg>

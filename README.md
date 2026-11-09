@@ -181,6 +181,7 @@ The heterogeneous compute substrate: NVIDIA, AMD, Ascend, PPU, Hygon, Apple and 
 - **Read the contract** — the architecture diagram above is the canonical shape of the system.
 - **Read the design review** — architecture analysis and project naming plan in [`docs/naming/`](docs/naming/).
 - **Read the diagram style** — block and line conventions, including dashed cross-cutting blocks, in [`docs/diagram-style.md`](docs/diagram-style.md).
+- **Browse the design archive** — all design documents and every diagram in [`docs/design/`](docs/design/).
 
 ## Repositories
 

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kense OS · 架构审查</title>
+<style>
+:root{--paper:#F8F6F0;--ink:#141413;--clay:#4E60FF;--note:#7A756C;--chalk:#FDFCF9;
+ --line:#DCD6C8;--soft:#EFEBE1;--page:#EDEAE2}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--ink);
+ font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"PingFang SC","Microsoft YaHei",monospace;
+ font-size:13px;line-height:1.75}
+.wrap{max-width:1080px;margin:0 auto;padding:40px 28px 90px}
+header{background:var(--paper);border:1px solid var(--line);border-left:3px solid var(--clay);
+ border-radius:14px;padding:26px 30px;margin-bottom:20px}
+h1{font-size:22px;font-weight:500;margin:0 0 6px}
+.sub{font-size:12.5px;color:var(--note);margin:0 0 14px}
+.meta{font-size:11.5px;color:var(--note);display:flex;gap:18px;flex-wrap:wrap}
+h2{font-size:15px;font-weight:500;margin:38px 0 14px;padding-top:12px;border-top:1px solid var(--line)}
+h3{font-size:13.5px;font-weight:500;margin:22px 0 8px}
+p{margin:0 0 12px}
+code{font-size:12px;background:var(--soft);border:1px solid var(--line);border-radius:3px;padding:1px 5px}
+table{width:100%;border-collapse:collapse;margin:0 0 18px;font-size:12px}
+th,td{text-align:left;border-bottom:1px solid var(--line);padding:8px 10px;vertical-align:top}
+th{background:var(--soft);font-weight:500;color:var(--note);font-size:11px}
+.bad{color:#993C1D}.ok{color:#0F6E56}.warnc{color:#854F0B}
+.box{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:16px 20px;margin:0 0 18px}
+.box.crit{border-left:3px solid var(--clay)}
+.box.good{border-left:3px solid var(--ink)}
+.tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;margin-right:6px;
+ background:var(--soft);color:var(--note);border:1px solid var(--line)}
+.tag.a{background:var(--clay);color:var(--chalk);border-color:var(--clay)}
+.tag.b{background:var(--ink);color:var(--chalk);border-color:var(--ink)}
+.diagram{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:14px;margin:0 0 18px}
+.diagram svg{display:block;width:100%;max-width:680px;height:auto;margin:0 auto}
+.diagram-cap{font-size:11px;color:var(--note);margin:0 0 10px;padding:0 4px}
+ul,ol{margin:0 0 14px;padding-left:22px}li{margin:5px 0}
+.foot{margin-top:44px;padding-top:20px;border-top:1px solid var(--line);font-size:11.5px;color:var(--note)}
+@media print{body{background:#fff}.wrap{padding:0;max-width:none}h2{page-break-after:avoid}
+ table,.box,.diagram{page-break-inside:avoid}}
+</style></head><body><div class="wrap">
+<header><h1>Kense OS · 架构审查</h1>
+<div class="sub">审查对象：kense-os-modules.html 的 16 张模块图与模块职责，对照 ai-os-architecture.html v2.0 与 unified-ai-platform-architecture.html v0.8</div>
+<div class="meta"><span>2026-11-08</span><span>错误 / 可达性 / DDD 三个维度</span><span>结论：图可作为模块速查，不可作为架构依据</span></div></header>
+<div class="box crit"><p><b>总结论</b>　16 张图在视觉风格、模板与命名上是一致的，作为「每个模块做什么」的速查表合格；但作为架构表达<b>不成立</b>：模块之间的边几乎全部丢失，17 条声明引用中 16 条只有一端；0x01 的 12 项必要功能有 3 项完全没有对应模块，0x03 的七个领域模型缺了 2 个；按 IaaS/MaaS/… 的部署形态切分不是 DDD 的限界上下文，七个共享模型构成一个没有 owner、没有防腐层的隐式大内核。</p></div>
+<h2>0x01 : 错误清单</h2>
+<table><thead><tr><th style="width:6%">#</th><th style="width:14%">类型</th><th style="width:42%">问题与证据</th><th>处置</th></tr></thead><tbody>
+<tr><td>A1</td><td class="bad">事实错误</td><td>MaaS 约束条只列 6 个 crate，漏了 <code>node-agent</code>；而同一模块中文说明写的是 7 个，0x04 表格与正文均明确 7 个。图内自相矛盾。</td><td class="ok">已修复并重渲染全部 SVG/PNG/HTML；约束条现为 <code>RUST 7 CRATES: … node-agent …</code>，目视确认无溢出。</td></tr>
+<tr><td>A2</td><td class="bad">语义串位</td><td>Identity 的 IN 写的是 Key 的字符串格式（<code>ak_live_{tenant}…</code>），是数据结构不是输入事件；OUT 写 <code>subject / plane / org re-injected at gateway</code>，这是网关 forward-auth 的回注动作，不是 Identity 的产出。Identity 真正的产出应是 5–15 分钟的 SVID / JWT。</td><td>重画该模块：IN = 认证请求 / Key 出示，OUT = 短时降权令牌。</td></tr>
+<tr><td>A3</td><td class="warnc">模板误用</td><td>「输入 → 核心 → 输出」是数据流模板，被强加给共享内核型模块后普遍不成立：Metering 的 IN 是转换过程、Audit 的 OUT 是查询能力、IaaS/SaaS 的 OUT 是对外抽象（0x03 表头即「对外抽象」）、Pool 的 IN 是硬件构成。</td><td>控制面五模块改用「契约 / 不变量 / 被谁调用」模板，不画流水线。</td></tr>
+<tr><td>A4</td><td class="warnc">语义不统一</td><td>底部橙条混装四种语义：架构约束（Gateway/Vault/Audit）、实现清单（MaaS）、计量单位（AaaS）、设计口号（URN/Releases）。</td><td>统一为「该模块不可让渡的一条不变量」，实现细节移入中文说明。</td></tr>
+<tr><td>A5</td><td class="warnc">源文档冲突</td><td><code>unified-ai-platform-architecture.html:229</code> 写「八类服务」，<code>ai-os-architecture.html:100</code> 与图集写「九类服务」。图集沿用 v2.0 口径，但两份蓝图未对齐。</td><td>以 v2.0 九类为准，回改早期蓝图口径或标注版本差异。</td></tr>
+</tbody></table>
+<h2>0x02 : 可达性 / 不可达</h2>
+<div class="box"><p><b>机器核对</b>　从每个模块的 OUT/STRIP 与 IN/ROLE 中提取对其它模块名的引用：<b>8/16</b> 个模块有出边、<b>3/16</b> 个有入边；共 17 条声明引用，其中 <b class="bad">16 条只有一端声明</b>。16 张图彼此独立，HTML 里没有放 0x02 总体架构图，因此从图集本身无法重建任何一条完整调用链。</p></div>
+<div class="diagram"><p class="diagram-cap">0x07 供应链闭环 · 回流边在图集中没有生产者</p>
+<svg viewBox="0 0 680 250" width="680" height="250" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>Supply-chain feedback loop broken in the module atlas</title>
+<desc>Actions to Packages to Releases to TaaS to MaaS to AaaS/SaaS, with the production-trace feedback edge back to TaaS missing from all sixteen module diagrams.</desc>
+<defs><marker id="rvA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#141413" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker><marker id="rvB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#4E60FF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<rect x="0" y="0" width="680" height="250" rx="14" fill="#F8F6F0"/>
+<g font-family="Menlo, SFMono-Regular, Consolas, monospace">
+<rect x="18" y="56" width="100" height="48" rx="6" fill="#141413"/>
+<text x="68" y="85" font-size="11" fill="#FDFCF9" text-anchor="middle">Actions</text>
+<path d="M118 80 L126 80" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#rvA)"/>
+<rect x="126" y="56" width="100" height="48" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="1.2"/>
+<text x="176" y="85" font-size="11" fill="#141413" text-anchor="middle">Packages</text>
+<path d="M226 80 L234 80" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#rvA)"/>
+<rect x="234" y="56" width="100" height="48" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="1.2"/>
+<text x="284" y="85" font-size="11" fill="#141413" text-anchor="middle">Releases</text>
+<path d="M334 80 L342 80" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#rvA)"/>
+<rect x="342" y="56" width="100" height="48" rx="6" fill="#141413"/>
+<text x="392" y="85" font-size="11" fill="#FDFCF9" text-anchor="middle">TaaS</text>
+<path d="M442 80 L450 80" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#rvA)"/>
+<rect x="450" y="56" width="100" height="48" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="1.2"/>
+<text x="500" y="85" font-size="11" fill="#141413" text-anchor="middle">MaaS</text>
+<path d="M550 80 L558 80" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#rvA)"/>
+<rect x="558" y="56" width="100" height="48" rx="6" fill="#FDFCF9" stroke="#4E60FF" stroke-width="1.2"/>
+<text x="608" y="85" font-size="11" fill="#141413" text-anchor="middle">AaaS / SaaS</text>
+<path d="M626 104 L626 158 L194 158 L194 106" fill="none" stroke="#4E60FF" stroke-width="1.2" stroke-dasharray="6 4" marker-end="url(#rvB)"/>
+<rect x="196" y="140" width="330" height="36" rx="6" fill="#4E60FF"/>
+<text x="361" y="162" font-size="11" fill="#FDFCF9" text-anchor="middle">FEEDBACK EDGE HAS NO PRODUCER IN THE ATLAS</text>
+<text x="340" y="208" font-size="11" fill="#7A756C" text-anchor="middle">production traces + new benchmark → new dataset → TaaS (blueprint 0x07)</text>
+</g></svg>
+</div>
+<h3>关键悬空端点</h3>
+<table><thead><tr><th style="width:26%">端点</th><th style="width:38%">图集里写了什么</th><th>为什么不可达</th></tr></thead><tbody>
+<tr><td>TaaS 输入</td><td><code>production traces</code></td><td>AaaS / SaaS 的输出里没有轨迹；0x07 的「生产轨迹 → 新数据集 + Benchmark → 下一轮训练」闭环断开。</td></tr>
+<tr><td>URN 输入</td><td><code>Capability registration</code></td><td>没有任何模块的 OUT 是「注册能力」，而 0x03 要求「所有能力先注册再暴露」。</td></tr>
+<tr><td>Audit 输入</td><td><code>Seven event classes</code></td><td>没有事件源。0x03 要求七类事件由认证、授权、资源变更等产生。</td></tr>
+<tr><td>Metering 输入</td><td><code>one meter event</code></td><td>没有生产者；0x00 原则 4 明确「计量点唯一归属资源生产者」，归属链在图里无处落地。</td></tr>
+<tr><td>Vault 输出</td><td><code>injected at egress</code></td><td>egress 属于 AaaS，但 AaaS 图没有来自 Vault 的入边。</td></tr>
+<tr><td>Releases 输出</td><td><code>across all layers</code></td><td>MaaS / PaaS / TaaS / AaaS 的 IN 都没有接收发布指令。</td></tr>
+<tr><td>Gateway / Pool 输出</td><td><code>→ 9 services</code> / <code>→ IaaS, MaaS, TaaS</code></td><td>服务层六个模块的 IN 既没有请求或短时凭据，也没有容量/资源声明。</td></tr>
+</tbody></table>
+<h3>覆盖缺口</h3>
+<table><thead><tr><th style="width:24%">基线</th><th style="width:16%">结果</th><th>缺什么</th></tr></thead><tbody>
+<tr><td>0x01 必要功能 12 项</td><td>完整 7 / 部分 2 / 缺失 3</td><td>缺「一致性（Outbox/Saga/幂等）」「事件通知（SSE/Webhook）」「用户入口（Console/REST/SDK/Docs）」；「租户隔离」「最小权限」只覆盖了 SCOPE 与审计员互斥。</td></tr>
+<tr><td>0x03 七个领域模型</td><td>画了 5 个</td><td>缺「发布原语」的独立表达（只散落在 Releases 橙条）与「事件与一致性」全部。后者正是跨服务可达性的保障机制，它的缺席使悬空边没有补偿路径。</td></tr>
+</tbody></table>
+<h3>两处设计语义问题（源文档层面）</h3>
+<ul><li><b>供给链 ≠ 调用链</b>：<code>IaaS → MaaS → TaaS → PaaS / AaaS → SaaS</code> 是能力供给方向，但 PaaS 的 Git build 不依赖 TaaS，AaaS 的 actor 也不依赖 TaaS。按调用依赖读这条链不成立；应区分两种箭头语义。</li><li><b>降级路径未表达</b>：0x08 的「本地策略快照续服务」与「吊销独立广播」是控制面不可用时数据面仍可达的唯一机制，图集未画；Gateway 橙条只写了主 Key 不转发。</li></ul>
+<h2>0x03 : DDD 领域驱动设计评估</h2>
+<div class="box good"><p><b>已经做对的</b>　七个共享模型是领域模型而非 CRUD 表；Job 状态机、Outbox + 幂等 + Saga 补偿、审计 append-only + 外部锚定、Vault 的 sealed/active/revoked + receipt，都有明确的<b>不变量与生命周期</b>；「计量点唯一归属资源生产者」体现了不变量归属聚合的意识；不可变版本 + 别名 + 流量权重可作为 <b>Published Language</b>；独立 <code>contracts/</code> 仓 + 生成客户端接近 <b>Open Host Service</b>。</p></div>
+<table><thead><tr><th style="width:22%">DDD 要素</th><th style="width:12%">判定</th><th>依据与影响</th></tr></thead><tbody>
+<tr><td>限界上下文</td><td class="bad">不符合</td><td>IaaS / MaaS / TaaS / PaaS / AaaS / SaaS 是<b>部署形态与商业模式</b>，不是通用语言边界。同一概念（Deployment / Replica / Instance / Job / Actor / Session）跨上下文漂移。</td></tr>
+<tr><td>上下文映射 Context Map</td><td class="bad">缺失</td><td>九服务 × 五横切平面之间没有任何关系模式（Customer-Supplier / Conformist / ACL / Shared Kernel / OHS）定义。<b>这正是可达性问题的根因</b>——不是图少画了箭头，是边界契约没定义。</td></tr>
+<tr><td>共享内核</td><td class="bad">过大</td><td>Key、URN、Meter、Audit、Vault、发布原语、事件一致性七个模型被九个服务共用，构成没有 owner、没有变更审批、没有防腐层的隐式大内核。</td></tr>
+<tr><td>聚合根 / 不变量边界</td><td class="warnc">未标注</td><td>0x03 给了数据结构但没给聚合边界。0x00 原则 5 要求「预算与状态同域结算」，而 Metering 与 TaaS 是两张图、两个上下文，一致性边界无处落地。</td></tr>
+<tr><td>领域事件</td><td class="warnc">偏技术</td><td>3.7 是「状态变化统一发事件」，缺事件风暴产出的业务事件名（ModelDeployed / AdapterEvaluated / BudgetExceeded / CredentialRevoked），也没区分内部领域事件与跨上下文集成事件。</td></tr>
+<tr><td>分层 / 六边形</td><td class="warnc">未分离</td><td>Rust crate（catalog / gpu / scheduler / state / inference）按技术职责命名，是数据 + 算法，没有 domain / application / infrastructure 分层与端口，领域逻辑易被基础设施渗透。</td></tr>
+<tr><td>通用语言</td><td class="warnc">不统一</td><td>同一 unit 在不同层含义不同；只有 URN 是显式 Published Language，其余概念无 glossary。</td></tr>
+</tbody></table>
+<h3>建议的整改顺序</h3>
+<ol><li><b>先补一张总体依赖图</b>放进图集（直接复用 0x02 总览图），并给每张模块图加「上游 / 下游」脚注，让 17 条边两端闭合。</li><li><b>补齐三个缺失模块</b>：Event &amp; Consistency（Outbox/Saga/幂等/补偿）、Event Notification（SSE/Webhook）、User Entry（Console/REST/SDK/Docs），并把「发布原语」提为独立横切模块。</li><li><b>重划限界上下文</b>：把 16 个「层」映射为约 9 个上下文——Identity &amp; Access、Service Catalog、Metering &amp; Billing、Audit &amp; Compliance、Secret Management、Model Supply（IaaS+MaaS+资源池）、Training &amp; Evaluation、Delivery &amp; Supply Chain（PaaS+Actions+Packages+Releases）、Agent Runtime（AaaS+SaaS）。</li><li><b>画 Context Map 并标关系模式</b>，为共享内核加 ACL；把 <code>contracts/</code> 定为 Published Language 的唯一 owner，URN 加版本与变更审批；每个上下文标聚合根、不变量与领域事件；Rust crate 按 domain / application / infra 分层。</li></ol>
+<div class="foot">本审查只读取并核对已有文档与图集，未改动架构决策。可验证数据：模块引用来自 modules.json 的 IN/OUT/STRIP/ROLE 文本提取；覆盖度基线取自 ai-os-architecture.html 0x01 / 0x03；依赖边基线取自 unified-ai-platform-architecture.html 0x02 / 0x07 / 0x08。</div>
+</div></body></html>

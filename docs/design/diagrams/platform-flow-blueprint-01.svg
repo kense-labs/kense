@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 680 800" width="100%" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>Flow 01 · One API Key request pipeline</title>
+<desc>一把 API Key 的请求从入口、网关策略解析、三阶段信任管线，到预算与作用域决策门；FAIL 走拒绝与补偿并写审计，PASS 进入零凭据服务执行，最终统一计量与审计提交。</desc>
+<defs>
+  <marker id="platform-flow-blueprint-01-arrow1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </marker>
+</defs>
+<rect x="0" y="0" width="680" height="800" rx="14" fill="#F8F6F0"/>
+<g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">
+
+
+<rect x="250" y="54" width="180" height="64" rx="8" fill="#141413"/>
+<text x="340" y="80" font-size="16" fill="#FDFCF9" text-anchor="middle">Inbound Request</text>
+<text x="340" y="99" font-size="16" fill="#FDFCF9" text-anchor="middle">One API Key</text>
+
+<path d="M340 122 L340 150" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#platform-flow-blueprint-01-arrow1)"/>
+<rect x="250" y="152" width="180" height="58" rx="8" fill="#141413"/>
+<text x="340" y="176" font-size="16" fill="#FDFCF9" text-anchor="middle">Gateway Policy</text>
+<text x="340" y="194" font-size="16" fill="#FDFCF9" text-anchor="middle">Resolve</text>
+
+<path d="M340 210 L340 238" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#platform-flow-blueprint-01-arrow1)"/>
+
+<rect x="210" y="240" width="260" height="128" rx="8" fill="#141413"/>
+<path d="M210 292 L470 292 M210 318 L470 318 M210 344 L470 344" stroke="#141413" stroke-width="0.9" opacity="0.35"/>
+<rect x="211" y="292" width="258" height="75" fill="#FDFCF9"/>
+<path d="M210 292 L470 292 M210 318 L470 318 M210 344 L470 344" stroke="#141413" stroke-width="0.9" opacity="0.28"/>
+<text x="340" y="264" font-size="16" fill="#FDFCF9" text-anchor="middle">3-Stage Trust Pipeline</text>
+<text x="222" y="309" font-size="11" fill="#141413">Tier 1 : Key Hash + Scope</text>
+<text x="222" y="335" font-size="11" fill="#141413">Tier 2 : Budget Reservation</text>
+<text x="222" y="361" font-size="11" fill="#141413">Tier 3 : Token Exchange</text>
+
+<path d="M340 368 L340 396" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#platform-flow-blueprint-01-arrow1)"/>
+<polygon points="340,398 424,462 340,526 256,462" fill="#4E60FF"/>
+<text x="340" y="456" font-size="12.5" fill="#FDFCF9" text-anchor="middle">Budget &amp; Scope</text>
+<text x="340" y="474" font-size="12.5" fill="#FDFCF9" text-anchor="middle">Gate</text>
+
+<path d="M256 452 L150 452 L150 560" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#platform-flow-blueprint-01-arrow1)"/>
+<text x="182" y="440" font-size="12.5" fill="#141413">FAIL</text>
+<path d="M424 452 L530 452 L530 560" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#platform-flow-blueprint-01-arrow1)"/>
+<text x="470" y="440" font-size="12.5" fill="#141413">PASS</text>
+
+
+<rect x="56" y="566" width="196" height="78" rx="8" fill="#4E60FF"/>
+<text x="154" y="596" font-size="12.5" fill="#FDFCF9" text-anchor="middle">Reject + Compensation</text>
+<text x="154" y="616" font-size="12.5" fill="#FDFCF9" text-anchor="middle">Audit Event Emitted</text>
+
+<rect x="428" y="566" width="196" height="78" rx="8" fill="#141413"/>
+<text x="526" y="596" font-size="12.5" fill="#FDFCF9" text-anchor="middle">Service Execution</text>
+<text x="526" y="616" font-size="12.5" fill="#FDFCF9" text-anchor="middle">Zero-Credential</text>
+
+<path d="M154 644 L154 690 L340 690 M526 644 L526 690 L340 690" fill="none" stroke="#141413" stroke-width="1.2"/>
+<path d="M340 690 L340 712" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#platform-flow-blueprint-01-arrow1)"/>
+<rect x="230" y="714" width="220" height="58" rx="8" fill="#141413"/>
+<text x="340" y="738" font-size="12.5" fill="#FDFCF9" text-anchor="middle">Unified Meter + Audit</text>
+<text x="340" y="756" font-size="12.5" fill="#FDFCF9" text-anchor="middle">Commit</text>
+
+</g>
+</svg>

@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>统一 AI 云平台架构蓝图 · 一把 API Key 打通全栈服务</title>
+<style>
+  :root{
+    --paper:#F8F6F0; --ink:#141413; --clay:#4E60FF; --note:#7A756C;
+    --chalk:#FDFCF9; --line:#DCD6C8; --soft:#EFEBE1; --page:#EDEAE2;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--page);color:var(--ink);
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"PingFang SC","Microsoft YaHei",monospace;
+    font-size:13px;line-height:1.75}
+  .wrap{max-width:1080px;margin:0 auto;padding:40px 28px 90px}
+  header{background:var(--paper);border:1px solid var(--line);border-left:3px solid var(--ink);
+    border-radius:14px;padding:26px 30px;margin-bottom:20px}
+  h1{font-size:21px;font-weight:500;margin:0 0 6px;letter-spacing:-.01em}
+  .sub{font-size:12.5px;color:var(--note);margin:0 0 14px}
+  .meta{font-size:11.5px;color:var(--note);display:flex;gap:18px;flex-wrap:wrap}
+  h2{font-size:15px;font-weight:500;margin:40px 0 14px;padding-top:12px;
+    border-top:1px solid var(--line);letter-spacing:.02em}
+  h3{font-size:13.5px;font-weight:500;margin:24px 0 10px}
+  p{margin:0 0 12px}
+  ul,ol{margin:0 0 14px;padding-left:22px}
+  li{margin:5px 0}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;
+    background:var(--soft);border:1px solid var(--line);border-radius:3px;padding:1px 5px}
+  pre{background:var(--ink);color:var(--chalk);border-radius:8px;padding:14px 16px;
+    overflow-x:auto;font-size:12px;line-height:1.65;margin:0 0 16px}
+  pre code{background:none;border:0;padding:0;color:inherit}
+  table{width:100%;border-collapse:collapse;margin:0 0 18px;font-size:12px}
+  th,td{text-align:left;border-bottom:1px solid var(--line);padding:9px 10px;vertical-align:top}
+  th{background:var(--soft);font-weight:500;color:var(--note);font-size:11px;letter-spacing:.02em}
+  tr:last-child td{border-bottom:1px solid var(--line)}
+  .lead{border-left:3px solid var(--ink);background:var(--paper);padding:14px 18px;border-radius:0 8px 8px 0;margin:0 0 20px}
+  .lead p{margin:0}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin:0 0 20px}
+  .card{border:1px solid var(--line);border-radius:10px;padding:14px 16px;background:var(--chalk)}
+  .card b{display:block;font-size:13px;margin-bottom:5px;font-weight:500}
+  .card span{font-size:12px;color:var(--note);line-height:1.6}
+  .tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;margin-right:6px;
+    background:var(--soft);color:var(--note);border:1px solid var(--line)}
+  .tag.t{background:var(--ink);color:var(--chalk);border-color:var(--ink)}
+  .tag.a{background:var(--clay);color:var(--chalk);border-color:var(--clay)}
+  .tag.b{background:transparent;color:var(--ink);border:1px dashed var(--ink)}
+  .warn{border-left:3px solid var(--clay);background:#E9ECFF;padding:12px 16px;border-radius:0 8px 8px 0;margin:0 0 18px}
+  .warn p{margin:0;font-size:12.5px}
+  .flow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 18px;font-size:12px}
+  .flow span{background:var(--soft);border:1px solid var(--line);border-radius:6px;padding:6px 10px}
+  .flow i{font-style:normal;color:var(--note)}
+  .diagram{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:14px;margin:0 0 20px;overflow-x:auto}
+  .diagram svg{display:block;min-width:620px;margin:0 auto}
+  .diagram-cap{font-size:11px;color:var(--note);margin:0 0 10px;padding:0 4px;letter-spacing:.02em}
+  .foot{margin-top:48px;padding-top:20px;border-top:1px solid var(--line);font-size:11.5px;color:var(--note)}
+  @media print{body{background:#fff;font-size:11.5px}.wrap{padding:0;max-width:none}h2{page-break-after:avoid}pre,table,.card,.diagram{page-break-inside:avoid}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>统一 AI 云平台架构蓝图</h1>
+  <p class="sub">一把 API Key 打通网关路由、AaaS、SaaS、PaaS、TaaS、MaaS、IaaS 与开发者供应链</p>
+  <div class="meta">
+    <span>版本 v0.8 · 补入 Vault 凭据模型</span>
+    <span>2026-11-08</span>
+    <span>状态：待评审</span>
+    <span>底座参考：workspace kstack / gpuworks</span>
+  </div>
+</header>
+
+<div class="lead">
+  <p><b>核心主张：</b>不要把它做成八个并列的产品，每个产品各自接一遍鉴权和计费。正确形态是「一条自下而上的供给侧依赖链 + 一个统一网关 + 四个横切平面（身份与策略、计量与计费、可观测与服务目录、审计与合规）」。一把 Key 打通的是<b>身份、配额、预算、审计和账单</b>，而不只是「能调通接口」。</p>
+</div>
+
+<div class="diagram">
+  <p class="diagram-cap">ARCH 01 · 分层架构总图　/　客户端 → 统一网关 → 服务层（八类服务）→ 异构资源池；右侧为四个横切平面</p>
+<svg viewBox="0 0 680 580" width="100%" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>ARCH 01 · Layered platform architecture</title>
+<desc>客户端持一把 Key 进入统一网关，网关按服务目录路由到八类服务，四个横切平面贯穿全栈，底层异构资源池提供算力并接受调度声明。</desc>
+<defs>
+  <marker id="archA1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </marker>
+</defs>
+<rect x="0" y="0" width="680" height="580" rx="14" fill="#F8F6F0"/>
+<g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">
+
+<rect x="250" y="50" width="180" height="60" rx="8" fill="#141413"/>
+<text x="340" y="76" font-size="12.5" fill="#FDFCF9" text-anchor="middle">Clients · SDK / CLI</text>
+<text x="340" y="95" font-size="12.5" fill="#FDFCF9" text-anchor="middle">One API Key</text>
+<path d="M340 114 L340 136" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#archA1)"/>
+
+<rect x="130" y="138" width="420" height="58" rx="8" fill="#141413"/>
+<text x="340" y="161" font-size="12.5" fill="#FDFCF9" text-anchor="middle">Unified Gateway · Policy PEP</text>
+<text x="340" y="180" font-size="11" fill="#FDFCF9" text-anchor="middle">LLM · API · MCP · A2A　/　ROUTE · SECURE · METER</text>
+<path d="M340 196 L340 220" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#archA1)"/>
+
+<rect x="40" y="222" width="480" height="186" rx="8" fill="none" stroke="#141413" stroke-width="0.9" stroke-dasharray="3 5" opacity="0.45"/>
+
+<rect x="56" y="242" width="100" height="60" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="106" y="268" font-size="12.5" fill="#141413" text-anchor="middle">SaaS</text>
+<text x="106" y="286" font-size="11" fill="#7A756C" text-anchor="middle">Resource Layer</text>
+<rect x="168" y="242" width="100" height="60" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="218" y="268" font-size="12.5" fill="#141413" text-anchor="middle">AaaS</text>
+<text x="218" y="286" font-size="11" fill="#7A756C" text-anchor="middle">Actor Sandbox</text>
+<rect x="280" y="242" width="100" height="60" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="330" y="268" font-size="12.5" fill="#141413" text-anchor="middle">PaaS</text>
+<text x="330" y="286" font-size="11" fill="#7A756C" text-anchor="middle">App Hosting</text>
+<rect x="392" y="242" width="100" height="60" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="442" y="268" font-size="12.5" fill="#141413" text-anchor="middle">TaaS</text>
+<text x="442" y="286" font-size="11" fill="#7A756C" text-anchor="middle">Post-Training</text>
+
+<rect x="56" y="326" width="100" height="60" rx="6" fill="#141413"/>
+<text x="106" y="352" font-size="12.5" fill="#FDFCF9" text-anchor="middle">MaaS</text>
+<text x="106" y="370" font-size="11" fill="#FDFCF9" text-anchor="middle">Model Serving</text>
+<rect x="168" y="326" width="100" height="60" rx="6" fill="#141413"/>
+<text x="218" y="352" font-size="12.5" fill="#FDFCF9" text-anchor="middle">IaaS</text>
+<text x="218" y="370" font-size="11" fill="#FDFCF9" text-anchor="middle">VM · VPC · Vol</text>
+<rect x="280" y="326" width="100" height="60" rx="6" fill="#FDFCF9" stroke="#4E60FF" stroke-width="1.2"/>
+<text x="330" y="352" font-size="12.5" fill="#141413" text-anchor="middle">Actions</text>
+<text x="330" y="370" font-size="11" fill="#4E60FF" text-anchor="middle">CI / CD</text>
+<rect x="392" y="326" width="100" height="60" rx="6" fill="#FDFCF9" stroke="#4E60FF" stroke-width="1.2"/>
+<text x="442" y="352" font-size="12.5" fill="#141413" text-anchor="middle">Packages</text>
+<text x="442" y="370" font-size="11" fill="#4E60FF" text-anchor="middle">Releases</text>
+
+<path d="M520 259 L536 259 M520 301 L536 301 M520 343 L536 343 M520 385 L536 385" fill="none" stroke="#141413" stroke-width="0.9" stroke-dasharray="3 4" opacity="0.5"/>
+<rect x="536" y="242" width="104" height="34" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="588" y="263" font-size="11" fill="#141413" text-anchor="middle">IDENTITY</text>
+<rect x="536" y="284" width="104" height="34" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="588" y="305" font-size="11" fill="#141413" text-anchor="middle">METER</text>
+<rect x="536" y="326" width="104" height="34" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="588" y="347" font-size="11" fill="#141413" text-anchor="middle">OBSERVE</text>
+<rect x="536" y="368" width="104" height="34" rx="6" fill="#4E60FF"/>
+<text x="588" y="389" font-size="11" fill="#FDFCF9" text-anchor="middle">AUDIT</text>
+
+<path d="M340 408 L340 448" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#archA1)"/>
+<path d="M500 450 C500 432 500 420 500 408" fill="none" stroke="#141413" stroke-width="1.2" stroke-dasharray="4 3" marker-end="url(#archA1)"/>
+
+<rect x="130" y="450" width="420" height="64" rx="8" fill="#141413"/>
+<text x="340" y="476" font-size="12.5" fill="#FDFCF9" text-anchor="middle">Heterogeneous Resource Pool</text>
+<text x="340" y="495" font-size="11" fill="#FDFCF9" text-anchor="middle">NVIDIA · AMD · Ascend · PPU · Hygon · Apple + Cloud</text>
+</g>
+</svg>
+</div>
+<div class="diagram">
+  <p class="diagram-cap">ARCH 02 · 供给侧依赖链 IaaS → MaaS → TaaS → PaaS/AaaS → SaaS，供应链总线向下注入，底部虚线为生产轨迹反馈轨</p>
+<svg viewBox="0 0 680 430" width="100%" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>ARCH 02 · Supply chain and feedback loop</title>
+<desc>Actions、Packages、Releases 形成供应链总线向下注入制品与版本，五层供给侧依赖链自左向右提供能力，生产轨迹经底部虚线反馈轨回流为下一轮训练数据。</desc>
+<defs>
+  <marker id="archA2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </marker>
+</defs>
+<rect x="0" y="0" width="680" height="430" rx="14" fill="#F8F6F0"/>
+<g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">
+
+<rect x="56" y="56" width="160" height="52" rx="6" fill="#FDFCF9" stroke="#4E60FF" stroke-width="1.2"/>
+<text x="136" y="78" font-size="12.5" fill="#141413" text-anchor="middle">Actions</text>
+<text x="136" y="95" font-size="11" fill="#4E60FF" text-anchor="middle">CI / CD</text>
+<rect x="260" y="56" width="160" height="52" rx="6" fill="#FDFCF9" stroke="#4E60FF" stroke-width="1.2"/>
+<text x="340" y="78" font-size="12.5" fill="#141413" text-anchor="middle">Packages</text>
+<text x="340" y="95" font-size="11" fill="#4E60FF" text-anchor="middle">OCI · SBOM</text>
+<rect x="464" y="56" width="160" height="52" rx="6" fill="#FDFCF9" stroke="#4E60FF" stroke-width="1.2"/>
+<text x="544" y="78" font-size="12.5" fill="#141413" text-anchor="middle">Releases</text>
+<text x="544" y="95" font-size="11" fill="#4E60FF" text-anchor="middle">Canary → Prod</text>
+<path d="M216 82 L256 82 M420 82 L460 82" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#archA2)"/>
+
+<path d="M136 108 L136 168 M340 108 L340 168 M544 108 L544 168 M136 168 L544 168" fill="none" stroke="#141413" stroke-width="0.9" stroke-dasharray="4 4" opacity="0.55"/>
+<path d="M208 168 L208 194 M340 168 L340 194 M472 168 L472 194" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#archA2)"/>
+
+<rect x="20" y="196" width="112" height="58" rx="6" fill="#141413"/>
+<text x="76" y="221" font-size="12.5" fill="#FDFCF9" text-anchor="middle">IaaS</text>
+<text x="76" y="239" font-size="11" fill="#FDFCF9" text-anchor="middle">VM · VPC</text>
+<rect x="152" y="196" width="112" height="58" rx="6" fill="#141413"/>
+<text x="208" y="221" font-size="12.5" fill="#FDFCF9" text-anchor="middle">MaaS</text>
+<text x="208" y="239" font-size="11" fill="#FDFCF9" text-anchor="middle">/v1 Model</text>
+<rect x="284" y="196" width="112" height="58" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="340" y="221" font-size="12.5" fill="#141413" text-anchor="middle">TaaS</text>
+<text x="340" y="239" font-size="11" fill="#7A756C" text-anchor="middle">Adapter</text>
+<rect x="416" y="196" width="112" height="58" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="472" y="221" font-size="12.5" fill="#141413" text-anchor="middle">PaaS · AaaS</text>
+<text x="472" y="239" font-size="11" fill="#7A756C" text-anchor="middle">App · Agent</text>
+<rect x="548" y="196" width="112" height="58" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="604" y="221" font-size="12.5" fill="#141413" text-anchor="middle">SaaS</text>
+<text x="604" y="239" font-size="11" fill="#7A756C" text-anchor="middle">Entity · Tool</text>
+<path d="M132 225 L150 225 M264 225 L282 225 M396 225 L414 225 M528 225 L546 225" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#archA2)"/>
+
+<path d="M340 254 L340 300" fill="none" stroke="#141413" stroke-width="1.2" stroke-dasharray="5 4"/>
+<path d="M604 254 L604 330 L350 330 L350 256" fill="none" stroke="#4E60FF" stroke-width="1.2" stroke-dasharray="5 4" marker-end="url(#archA2)"/>
+<path d="M60 330 C36 330 36 308 56 308" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#archA2)"/>
+</g>
+</svg>
+</div>
+<h2>0x00 : 设计原则</h2>
+<ol>
+  <li><b>Key 只在边缘出现一次。</b>密钥绝不下发到业务服务或沙箱；下游只认短时、降权、限定 audience 的内部身份。</li>
+  <li><b>计量点唯一归属资源生产者。</b>网关不重复统计 token，模型服务不重复统计请求数；嵌套调用挂同一条归属链。</li>
+  <li><b>所有能力先注册再暴露。</b>服务目录以 URN 声明 scope、计量单位、配额维度与 SLO，网关由此生成路由和策略。</li>
+  <li><b>控制面与数据面分离。</b>控制面短暂不可用时，已建立的数据面请求必须继续可用（本地策略快照 + 脏路由表回退）。</li>
+  <li><b>同步与异步分开建模。</b>推理请求走请求/响应；训练、构建、批量、长驻 Actor 一律走 Job + 事件 + 预算预扣/结算。</li>
+  <li><b>审计是一等平面。</b>审计 ≠ 日志 ≠ Trace ≠ 计费；必须只追加、不可篡改、与管理权限隔离，并在 P0 就上线。</li>
+  <li><b>幂等与补偿先于功能。</b>跨服务写操作默认会失败一半，长 Job 必须显式状态机 + Saga 补偿，预算与状态同域结算。</li>
+  <li><b>配额不等于容量。</b>限流与预算只管「允许用多少」，物理资源争抢必须有独立的优先级、抢占与公平调度。</li>
+  <li><b>可恢复性靠演练证明。</b>备份、降级、吊销必须定期实测，未演练过的能力不算具备。</li>
+  <li><b>能复用就不自建。</b>MaaS 直接以现有 kstack 为底座；网关、沙箱、制品、工作流优先采用成熟开源实现。</li>
+</ol>
+
+<h2>0x01 : 参照物对齐（避免设计跑偏）</h2>
+<table>
+  <thead><tr><th style="width:20%">参照</th><th style="width:36%">实际定位</th><th>要吸收的关键机制</th></tr></thead>
+  <tbody>
+    <tr><td>agentgateway.dev</td><td>单数据面统一 HTTP/gRPC/TCP、LLM 供应商、MCP 工具、A2A 调用</td><td>凭据托管与 failover、token 预算、语义缓存、prompt 脱敏、MCP 工具签名与审计、Inference 延迟/成本感知路由</td></tr>
+    <tr><td>ate.dev (Agent Substrate)</td><td>AaaS = 有状态 Agent 运行时，不是「Agent 应用市场」</td><td>每 actor 独占 microVM/gVisor 沙箱、挂起与 &lt;500ms 唤醒、全状态快照、SPIFFE 短时身份、沙箱零凭据、egress 代注入、默认无网络</td></tr>
+    <tr><td>aisa.one</td><td>SaaS = 给 Agent 用的「资源层」，不是传统多租户应用</td><td>一个 MCP server 统一 5000+ API / 110+ 模型 / 40+ skills、跨源统一 schema、每字段带 source/method/as_of、按有效结果计费、空结果免费、字段只增不改</td></tr>
+    <tr><td>mint-doc.macaron.xin (Mint Recursive)</td><td>TaaS = 模型后训练闭环</td><td>Benchmark 先行、LLM-as-judge、失败轨迹造样本、SFT/RL + LoRA/全参、checkpoint 与数据版本关联、同一套评测验证、一键部署、生产反馈回流、Serverless 按 token 计费、Tinker 兼容 API</td></tr>
+    <tr><td>flitai-io/gpuworks</td><td>MaaS = Model as a Service；与工作区 kstack 几乎逐字同源，是其上游开源版</td><td>392 模型 / 1235 启动规格、异构卡调度与可解释放置、dGPU / PD 分离 / sleep-wake、OpenAI /v1 网关、按 key 用量、离线分发、OTLP trace</td></tr>
+    <tr><td>Vercel</td><td>PaaS = Git 驱动的应用托管</td><td>Preview deployment、构建容器、边缘函数、按环境发布、弹性 0→N、按请求与构建分钟计费</td></tr>
+    <tr><td>ZStack</td><td>IaaS = 计算/网络/存储资源池</td><td>租户 VPC、云主机、云盘与快照、镜像、安全组、计量计费、多区域与公私云统一池</td></tr>
+    <tr><td>GitHub Actions / Packages / Releases</td><td>开发者供应链平面（横切，不是第 8 个孤立服务）</td><td>事件触发的 Workflow、OCI/ORAS 制品与 Attestation、版本通道、灰度与回滚、签名溯源（SLSA）</td></tr>
+  </tbody>
+</table>
+
+<h2>0x02 : 分层与依赖方向</h2>
+<div class="flow">
+  <span>客户端 / 一把 Key</span><i>→</i><span>统一网关与策略执行点</span><i>→</i><span>服务目录 URN</span><i>→</i><span>八类服务</span><i>→</i><span>异构资源池</span>
+</div>
+<p>供给侧依赖链：<code>IaaS → MaaS → TaaS → PaaS / AaaS → SaaS</code>。下层向上层提供资源与能力，上层向下层回报生产数据。Actions / Packages / Releases 横切所有层，负责把变更送进这条链；四个横切平面负责让一把 Key 在任意一层都得到一致的身份、配额、预算、账单与审计语义。</p>
+<div class="grid">
+  <div class="card"><b>数据面</b><span>网关、模型/API/MCP/A2A 路由、推理实例、沙箱 egress、Edge 函数。要求低延迟、可独立降级。</span></div>
+  <div class="card"><b>控制面</b><span>租户与项目、Key 与策略、服务目录、配额与预算、发布编排、训练编排、调度决策、账单。</span></div>
+  <div class="card"><b>遥测面</b><span>Trace / 日志 / 指标 / 计量事件，异步流入账单独库，不阻塞请求路径。</span></div>
+  <div class="card"><b>审计与合规面</b><span>只追加的审计事件、哈希链与外部锚定、审计员权限隔离、留存与取证导出；与遥测库、账单库物理独立。</span></div>
+</div>
+
+<h2>0x03 : 服务契约与计量单位</h2>
+<table>
+  <thead><tr><th>层</th><th>对外抽象</th><th>计量单位</th><th>隔离粒度 / 状态</th><th>典型耗时</th></tr></thead>
+  <tbody>
+    <tr><td>IaaS</td><td>VM / VPC / Volume / Image / Snapshot</td><td>vCPU·h、GPU·h、GB·月、出网 GB</td><td>租户 VPC，长生命周期</td><td>分钟 ~ 月</td></tr>
+    <tr><td>MaaS</td><td>Model / Deployment / Replica / Token</td><td>输入输出 token、卡时、副本·秒</td><td>部署级，常驻</td><td>毫秒 ~ 小时（批量）</td></tr>
+    <tr><td>TaaS</td><td>Dataset / Experiment / Job / Adapter / Eval</td><td>训练 token、GPU·秒、评测次数</td><td>实验级，Job</td><td>分钟 ~ 天</td></tr>
+    <tr><td>PaaS</td><td>Project / Build / Preview / Deployment</td><td>构建分钟、请求数、GB·s、出网 GB</td><td>项目 / 函数，弹性 0→N</td><td>秒 ~ 分钟</td></tr>
+    <tr><td>AaaS</td><td>Actor / Session / Snapshot / Tool call</td><td>actor·秒、唤醒次数、快照 GB·天</td><td>单 actor 沙箱，可挂起长驻</td><td>毫秒 ~ 永久</td></tr>
+    <tr><td>SaaS</td><td>Entity / Tool / Skill</td><td>按有效结果条数；无结果不收费</td><td>租户 schema，无状态</td><td>毫秒 ~ 秒</td></tr>
+    <tr><td>Actions</td><td>Workflow / Job / Runner / Secret</td><td>runner·分钟、并发数</td><td>单次 workflow run</td><td>秒 ~ 小时</td></tr>
+    <tr><td>Packages</td><td>Artifact / Version / Attestation</td><td>GB·月、拉取次数</td><td>命名空间 + 保留策略</td><td>永久</td></tr>
+    <tr><td>Releases</td><td>Release / Channel / Environment</td><td>发布次数、灰度流量</td><td>项目 × 环境，版本化</td><td>版本化</td></tr>
+  </tbody>
+</table>
+
+<h2>0x04 : 统一身份与「一把 Key」</h2>
+<div class="warn">
+  <p><b>设计判断：</b>「一把 Key」应理解为「一个凭证入口」，不是字面意义的全局万能长期密钥。默认一把主 Key 即可使用全部服务，但架构必须支持派生受限子 Key、即时吊销、双活轮换、每 Key 预算硬顶；否则一次泄露等于全平台加全部预算失守。</p>
+</div>
+
+<h3>4.1 Key 模型</h3>
+<pre><code>ak_live_&lt;tenant&gt;.&lt;project&gt;.&lt;env&gt;.&lt;base62-random&gt;
+存储：prefix 索引 + HMAC-SHA256 / argon2id 哈希（明文仅创建时展示一次）
+绑定：tenant_id · project_id · env · policy_set · budget_id · quota · expires_at
+能力：scope 白名单（URN 前缀）、速率上限、并发上限、预算硬顶、IP/来源限制、可吊销、可轮换</code></pre>
+
+<h3>4.2 统一服务目录（URN）</h3>
+<p>任何服务上线前注册：URN 前缀、协议、计量单位、配额维度、SLO、所需 scope、审计等级。网关据此生成路由、策略与文档，避免九套各自实现鉴权。</p>
+<pre><code>urn:plat:gw:route:*                     统一网关路由
+urn:plat:maas:model:*                   OpenAI /v1 模型
+urn:plat:maas:deployment:{id}:*        部署与副本管理
+urn:plat:taas:job:*                     训练任务
+urn:plat:taas:dataset:{id}:*            数据集与版本
+urn:plat:paas:project:{id}:deploy      应用发布
+urn:plat:aaas:actor:{id}:invoke        Agent 调用
+urn:plat:saas:tool:get_organization    资源层工具（按结果计费）
+urn:plat:actions:workflow:*             CI/CD
+urn:plat:packages:artifact:*            制品
+urn:plat:releases:channel:prod          生产发布通道
+urn:plat:iaas:vm:*                      云主机</code></pre>
+
+<h3>4.3 信任传播（RFC 8693 Token Exchange）</h3>
+<ol>
+  <li>客户端持主 Key 调用网关；网关用<b>本地策略快照</b>校验哈希、scope、预算、限流，生成 <code>trace_id</code> 与 <code>budget_reservation_id</code>。</li>
+  <li>网关换取 5–15 分钟的 SPIFFE SVID / JWT：<code>aud</code> 限定单个服务，scope 取本次所需最小子集，携带 tenant/project/trace/reservation。</li>
+  <li>下游服务<b>不认主 Key</b>，只验证内部身份；AaaS 沙箱内无任何平台凭据。</li>
+  <li>服务间调用使用 on-behalf-of 并继续降权，禁止原样转发身份（防 confused deputy），每跳写 delegation chain，并落为审计事件与授权链证据。</li>
+  <li>AaaS 需要访问外部 SaaS 时，由 egress 网关按策略从密钥库取凭据并注入 outbound 请求，沙箱自身零凭据、默认无出网。</li>
+</ol>
+
+<h3>4.4 一把 Key 的调用示例</h3>
+<pre><code>export KEY="ak_live_acme.chatbot.prod.xxxxxxxx"
+
+# MaaS：模型推理
+curl https://api.plat.example/v1/chat/completions -H "Authorization: Bearer $KEY" \
+  -d '{"model":"qwen3-8b","messages":[{"role":"user","content":"hi"}]}'
+
+# SaaS：资源层（按结果计费，MCP 或 REST 同构）
+curl https://api.plat.example/v1/entities/organization?domain=acme.com -H "Authorization: Bearer $KEY"
+
+# TaaS：提交训练 Job（异步，返回 job_id 与预算预扣）
+curl -X POST https://api.plat.example/v1/train/jobs -H "Authorization: Bearer $KEY" \
+  -d '{"base_model":"qwen3-8b","method":"lora","dataset":"ds://prod/v12","benchmark":"bm://support-v3"}'
+
+# AaaS：唤醒一个挂起的 actor
+curl -X POST https://api.plat.example/v1/actors/support-bot/invoke -H "Authorization: Bearer $KEY" -d '{"input":"..."}'
+
+# Actions：触发工作流
+curl -X POST https://api.plat.example/v1/actions/workflows/deploy/dispatch -H "Authorization: Bearer $KEY" \
+  -d '{"ref":"main","inputs":{"release":"v1.4.0"}}'</code></pre>
+
+<h2>0x05 : 计量与计费闭环</h2>
+<h3>5.1 统一 meter 事件</h3>
+<pre><code>{
+  "event_id": "01J...",                 // 幂等键，ULID
+  "trace_id": "4bf9...", "span_id": "a1c2...",
+  "billing_parent": "01J...",           // 嵌套调用指向父计量事件
+  "tenant": "acme", "project": "chatbot", "env": "prod", "key_id": "ak_...7f",
+  "service": "maas", "resource": "model/qwen3-8b",
+  "quantity": 1832, "unit": "token", "dimension": "output",
+  "outcome": "ok | no_result | failed | cached",
+  "reservation_id": "rsv_...", "ts": "2026-11-08T04:00:00Z"
+}</code></pre>
+<ul>
+  <li><b>归一化</b>：各层单位经带版本的汇率表折算成 credit，按 tenant / project / env / service / trace 聚合出账单与成本树。</li>
+  <li><b>防重复计费</b>：计量点唯一归属资源生产者。网关只记请求数与出网字节；token 由 MaaS 记；GPU·秒由调度器记；结果条数由 SaaS 记；actor·秒由 AaaS 记。</li>
+  <li><b>嵌套归属</b>：AaaS → MaaS → SaaS 是三次真实成本，各记各的，用 <code>billing_parent</code> 串到同一 <code>trace_id</code>，账单可展开、可审计、可证明无重复。</li>
+  <li><b>按结果计费</b>：SaaS 仅 <code>outcome=ok 且非空结果</code> 计费；缓存命中、校验失败、空响应不收费；字段带 source/method/as_of。</li>
+  <li><b>预扣与结算</b>：短请求在网关按上限预扣；长 Job 创建时按估算预扣 → 心跳续扣 → 结束按实际结算、多退少补；预算耗尽按策略拒新请求或优雅终止运行中任务。</li>
+  <li><b>可用性隔离</b>：预算判定在网关本地（令牌桶 + 周期对账），账单链路异步（事件流 → 流处理 → 账库），挂账不阻塞请求路径；event_id 去重保证幂等。</li>
+  <li><b>与审计解耦</b>：meter 事件用于计费、可归档；审计事件只追加、不可改，两者用 <code>trace_id</code> / <code>cost_event_id</code> 关联，但存储与留存策略独立（见第 06 节）。</li>
+</ul>
+
+<h2>0x06 : 审计与合规平面</h2>
+<p><b>先分清四件事：</b>日志记录「系统发生了什么」，Trace 记录「一次请求怎么走」，meter 记录「该收多少钱」，而<b>审计记录「哪个主体、在何时、用什么凭据、对哪个资源做了什么动作、结果如何，且能证明这条记录未被篡改」</b>。v0.1 只做了前三者加零散的审计提及，这是本版补齐的缺口：一把 Key 覆盖全平台，没有独立的不可抵赖层，出事时回答不了「谁把生产环境的模型版本换了 / 谁导出了数据集 / 谁提升了子 Key 的 scope」。</p>
+
+<h3>6.1 统一审计事件</h3>
+<pre><code>{
+  "event_id": "01J...", "seq": 918273, "prev_hash": "sha256:...", "hash": "sha256:...",
+  "ts": "2026-11-08T04:00:00Z",
+  "actor": {"type":"human|key|service|agent","id":"usr_... / ak_... / svc_...","tenant":"acme","project":"chatbot","env":"prod"},
+  "auth": {"key_id":"ak_...7f","credential":"primary_key|sub_key|svid|platform_token","exchange_id":"tx_..."},
+  "delegation_chain": ["ak_...7f","svid:aaas","svid:maas"], "on_behalf_of":"usr_...",
+  "action": "releases.promote", "resource": "urn:plat:releases:channel:prod@v1.4.0",
+  "decision": "allow|deny", "reason": "policy:scope / budget_exhausted / admin_override",
+  "source": {"ip":"...", "ua":"...", "trace_id":"4bf9...", "request_id":"..."},
+  "before": {"adapter":"v1.3.9"}, "after": {"adapter":"v1.4.0"}, "diff": ["adapter"],
+  "result": "ok|failed|partial", "cost_event_id": "01J..."
+}</code></pre>
+<p>字段约束：主 Key 明文、SVID、第三方凭据、prompt 与响应正文<b>一律不入库</b>，只存 id / 哈希前缀；确需内容留证时走独立加密证据库、单独授权、到期销毁。egress 注入只记 <code>secret_id</code> 与目标域名，绝不记凭据明文。</p>
+
+<h3>6.2 必须覆盖的七类事件</h3>
+<table>
+  <thead><tr><th style="width:22%">类别</th><th>事件</th><th style="width:18%">记录强度</th></tr></thead>
+  <tbody>
+    <tr><td>认证与凭据</td><td>登录/登出/失败、Key 创建·展示·轮换·吊销、子 Key 派生、Token Exchange 与 SVID 签发</td><td>全量</td></tr>
+    <tr><td>授权决策</td><td>所有 deny（含 reason）、敏感 allow（跨租户、生产环境、scope 提升、预算变更）</td><td>deny 全量 / allow 采样</td></tr>
+    <tr><td>资源变更</td><td>CRUD、部署/发布/回滚、训练 Job、数据集与制品版本、灰度比例；记 before / after / diff</td><td>全量</td></tr>
+    <tr><td>数据访问</td><td>SaaS 实体查询、数据集读取、权重与制品下载、日志与诊断包导出（含脱敏动作）</td><td>按数据分级</td></tr>
+    <tr><td>Agent 行为</td><td>actor 创建/唤醒/挂起、工具与 MCP 调用、参数摘要、egress 凭据注入、delegation chain</td><td>全量</td></tr>
+    <tr><td>计费与预算</td><td>预算调整、汇率表版本变更、预扣/结算/退款、人工调账</td><td>全量</td></tr>
+    <tr><td>管理动作</td><td>租户/成员/角色变更、策略与服务目录变更、<b>审计配置自身的变更</b></td><td>全量</td></tr>
+  </tbody>
+</table>
+
+<h3>6.3 不可抵赖与生命周期</h3>
+<ul>
+  <li><b>只追加 + 哈希链</b>：每租户一条链，事件含 <code>prev_hash</code> 与 <code>seq</code>；定期把链头锚定到外部只写存储或透明日志，使内部管理员也无法无痕删改。</li>
+  <li><b>权限分离</b>：审计员角色与平台管理员分离；管理员不能删改审计记录；<b>每一次审计查询本身也产生审计事件</b>。</li>
+  <li><b>写入语义</b>：普通动作异步入事件流；敏感动作（发布到 prod、Key 吊销、角色变更、数据集导出）必须<b>先落审计再执行</b>，审计系统不可用时拒绝该动作而非静默放行。</li>
+  <li><b>关联与隔离</b>：用 <code>trace_id</code> 展开技术链路、<code>cost_event_id</code> 对上账单，但审计库与账单库、日志库独立——账单可归档清理，审计不可改。</li>
+  <li><b>留存与取证</b>：默认 1 年热存 + 冷归档（可按合规要求配置）；提供按 actor / resource / action / decision / 时间检索、SIEM 导出、合规包（带哈希链校验结果）与法律保全 hold。</li>
+</ul>
+
+<h3>6.4 与现有底座的差距及落地节奏</h3>
+<p>kstack 已有可复用的碎片：credential-safe 命令日志（<code>internal/commandlog</code> 的 Redact）、限时调试会话（<code>internal/debuglog</code>）、终端会话审计记录（<code>store.TerminalSessions</code>，含 CloseReason）、请求时间线（uxrecord）、稳定错误码契约。但它们分散在不同库表、无统一 schema、无哈希链、无审计员隔离，属于「可观测」而非「审计」。</p>
+<ul>
+  <li><b>P0 必做</b>：认证与凭据、授权 deny、资源变更、管理动作四类 + 统一审计事件 schema。审计不能推到后期补，否则历史窗口永远空白。</li>
+  <li><b>P1</b>：Agent 行为、计费与预算、哈希链与外部锚定、审计员角色。</li>
+  <li><b>P2</b>：数据访问分级、合规包导出、法律保全 hold。</li>
+</ul>
+
+<h2>0x07 : 开发者供应链平面</h2>
+<table>
+  <thead><tr><th style="width:18%">服务</th><th>职责</th><th>与其余层的接口</th></tr></thead>
+  <tbody>
+    <tr><td>Actions</td><td>事件触发的 Workflow（push / PR / schedule / 评测完成 / 训练完成 / 告警）、托管 Runner（CPU 与 GPU 两种）、Secrets 复用身份平面、并发与超时</td><td>产出构建产物给 Packages；触发 Releases；调用 TaaS 启动训练；调用 MaaS 做评测</td></tr>
+    <tr><td>Packages</td><td>OCI/ORAS 制品仓库：容器镜像、模型权重、LoRA adapter、数据集、Agent bundle、MCP server 包；版本不可变、Attestation 与 SBOM、签名验签、保留策略</td><td>TaaS 读数据集与基座；MaaS 读权重与镜像；AaaS 读 actor 镜像；Releases 引用具体 digest</td></tr>
+    <tr><td>Releases</td><td>Release / Channel（canary、prod）/ Environment；灰度比例、健康检查门禁、一键回滚、变更记录与审计</td><td>把 MaaS 的 adapter 版本、PaaS 的部署、AaaS 的 actor 模板统一成一次可回滚的发布</td></tr>
+  </tbody>
+</table>
+<p><b>闭环：</b>Actions（代码/事件）→ Packages（制品与版本）→ Releases（灰度发布）→ TaaS（训练与评测产出 adapter）→ MaaS（挂载 adapter 部署推理）→ AaaS / SaaS（智能体消费模型与数据）→ 生产轨迹与失败样本回流为新数据集与新 Benchmark → 下一轮训练。这是把七层服务从「并列菜单」变成「一个可迭代系统」的关键。</p>
+
+<h2>0x08 : 控制面 / 数据面与可用性</h2>
+<ul>
+  <li><b>本地策略快照</b>：网关缓存 Key 哈希、scope、配额、路由表与服务目录版本；控制面不可用时按最后一份快照继续服务（可直接复用 kstack 的路由表 2s 刷新 + 脏快照回退机制）。</li>
+  <li><b>吊销传播</b>：Key 吊销是唯一需要「快速全局生效」的操作，走独立的高优先级失效广播（而非等待快照 TTL）。</li>
+  <li><b>SLO 分级</b>：网关与 MaaS 数据面 P99 目标最严；账单、分析、报表允许分钟级延迟；TaaS / Actions 为异步任务，用事件与状态机而非超时重试。</li>
+  <li><b>多区域</b>：IaaS 资源池按区域自治，控制面全局唯一（或主备），计量事件就近写入后汇聚；跨区调用在网关层按 URN 前缀路由。</li>
+  <li><b>隔离粒度不一致是现实</b>：IaaS 是 VPC、MaaS 是部署/副本、PaaS 是函数、AaaS 是单 actor 沙箱。不要假装有一层统一隔离，而要在服务目录里显式声明每层的隔离等级与合规边界。</li>
+</ul>
+
+<h2>0x09 : 与现有 kstack 的映射</h2>
+<table>
+  <thead><tr><th style="width:26%">能力</th><th style="width:16%">现状</th><th>说明</th></tr></thead>
+  <tbody>
+    <tr><td>MaaS 全链路</td><td><span class="tag t">已有</span></td><td>392 模型 / 1235 规格、异构调度与可解释放置、dGPU / PD / sleep-wake、OpenAI /v1、批量推理、benchmark、Playground</td></tr>
+    <tr><td>IaaS 部分</td><td><span class="tag a">部分</span></td><td>已有 6 家云 provider 的实例同步、开关机、创建销毁与一键装 agent；缺租户 VPC / 云盘 / 快照 / 镜像等完整 IaaS 语义</td></tr>
+    <tr><td>网关与路由</td><td><span class="tag a">部分</span></td><td>已有 /v1 网关、三种路由策略、重试、模型名改写、用量注入；缺 MCP / A2A / 通用 API 统一数据面与多服务路由</td></tr>
+    <tr><td>计量雏形</td><td><span class="tag a">部分</span></td><td>usage_hourly / usage_daily 按 key 统计 token；升级为统一 meter + credit + 预算预扣即可复用</td></tr>
+    <tr><td>可观测与错误契约</td><td><span class="tag t">已有</span></td><td>请求时间线、W3C traceparent、OTLP 导出、FTS5 日志、稳定错误码 + 中英本地化（i18n-check 强制）</td></tr>
+    <tr><td>发布与供应链</td><td><span class="tag a">部分</span></td><td>已有 ed25519 签名发布通道、双通道版本、镜像清单、模型/镜像 peer sync 与离线导入；可演进为 Packages / Releases</td></tr>
+    <tr><td>审计与合规</td><td><span class="tag a">部分</span></td><td>已有 credential-safe 命令日志（commandlog.Redact）、限时调试会话、终端会话审计记录（TerminalSessions / CloseReason）、请求时间线；缺统一 schema、哈希链、审计员隔离与取证导出</td></tr>
+    <tr><td>多租户 IAM</td><td><span class="tag b">缺口</span></td><td>当前是单管理员 + JWT 会话 + <code>gw-</code> key + <code>kst_</code> 平台 token，无 tenant / project / env / 预算模型</td></tr>
+    <tr><td>TaaS</td><td><span class="tag b">缺口</span></td><td>roadmap 提到训练微调但未实现；可复用 GPU 调度与资产分发，新增 Dataset / Job / Adapter / Eval 编排</td></tr>
+    <tr><td>多租户数据隔离</td><td><span class="tag b">缺口</span></td><td>当前单管理员 + 单 SQLite 五库，无 tenant_id / RLS；需迁 PostgreSQL 并加查询门禁（13.1、17.2）</td></tr>
+    <tr><td>RBAC / SSO / 容量仲裁</td><td><span class="tag b">缺口</span></td><td>现有 JWT 会话 + <code>gw-</code> / <code>kst_</code> 凭据，无组织角色模型、无跨租户公平调度（13.2、13.3）</td></tr>
+    <tr><td>备份 / 灾备 / SLO</td><td><span class="tag b">缺口</span></td><td>有升级回滚与数据保留，但无 RPO/RTO 目标、恢复演练与错误预算（14.3、16.2）</td></tr>
+    <tr><td>PaaS、AaaS、SaaS、Actions</td><td><span class="tag b">缺口</span></td><td>需新建或集成成熟开源实现</td></tr>
+  </tbody>
+</table>
+
+<h2>0x0A : 分阶段落地路线</h2>
+<table>
+  <thead><tr><th style="width:10%">阶段</th><th style="width:34%">目标</th><th>交付物与验收</th></tr></thead>
+  <tbody>
+    <tr><td>P0</td><td>统一凭证平面</td><td>把 kstack 的 API key 升级为平台 Key（tenant/project/env/budget）、服务目录 URN、令牌交换与短时身份、统一 meter 事件、网关本地预算闸，以及审计事件四类基线（认证/凭据、授权 deny、资源变更、管理动作）。验收：一把 Key 调 MaaS 与健康检查，账单能按 trace 展开，且能从审计链反查任一敏感动作。<b>v0.6 收敛</b>：开发者入口收敛为最小控制台 + SDK/CLI + 文档；语义内容层移出 P0，详见 0x12。</td></tr>
+    <tr><td>P1</td><td>统一网关 + 供应链骨架</td><td>接入 agentgateway 类数据面（LLM / API / MCP / A2A）；Packages（OCI + 签名 + Attestation）、Releases（channel 与回滚）、Actions（最小 workflow + Runner）。验收：一次 push 触发构建、制品入库、灰度发布到 MaaS。</td></tr>
+    <tr><td>P2</td><td>TaaS 闭环</td><td>Dataset / Job / Adapter / Eval 编排，复用 kstack GPU 调度与资产分发；LoRA adapter 共基座、按 token 计费、基准评测门禁、训练产物直接注册进 Packages。验收：失败轨迹回流并产出可部署 adapter。</td></tr>
+    <tr><td>P3</td><td>PaaS 与 AaaS</td><td>Git → Build → Preview → Edge；microVM/gVisor actor 沙箱、挂起唤醒、快照、egress 凭据注入。验收：actor 零凭据调用 MaaS 与 SaaS，账单归属链正确。</td></tr>
+    <tr><td>P4</td><td>SaaS 资源层与生态</td><td>统一 schema 的实体/工具目录、按结果计费、来源标注、字段只增不改；开放第三方能力注册。验收：跨源字段可追溯、空结果不计费。</td></tr>
+  </tbody>
+</table>
+<p><b>v0.3 修订 · 各阶段新增横切交付</b>（与上表并行，不可后置）：</p>
+<ul>
+  <li><b>P0</b>：tenant/project/env 三层模型 + 数据层迁移方案、统一 API 契约与错误码、Idempotency-Key、Job 状态机与三个补偿场景、密钥泄露响应 runbook、审计四类基线。</li>
+  <li><b>P1</b>：RBAC 角色矩阵 + SSO、容量仲裁与加权公平队列、Saga 编排器、备份与首次恢复演练、SLO/SLI 与错误预算、东西向 mTLS。</li>
+  <li><b>P2</b>：数据分级 / 驻留 / 血缘、删除权传播、JIT 提权、AI 威胁门禁、成本归因与毛利核算。</li>
+  <li><b>P3/P4</b>：多区域故障域与降级演练、合规认证证据包、套餐发票与对账、生态开放审核。</li>
+</ul>
+
+<h2>0x0B : 技术选型建议</h2>
+<table>
+  <thead><tr><th style="width:24%">位置</th><th>建议</th></tr></thead>
+  <tbody>
+    <tr><td>统一网关</td><td>agentgateway（Rust / CNCF，standalone 或 K8s）；策略扩展用外部授权（OPA / Cedar）；语义缓存与 token 预算作为网关过滤器</td></tr>
+    <tr><td>身份</td><td>SPIFFE / SPIRE + OIDC；OAuth 2.0 Token Exchange（RFC 8693）；密钥库 Vault 或云 KMS；Key 哈希 argon2id / HMAC</td></tr>
+    <tr><td>服务目录</td><td>自研轻量注册中心（URN + 计量单位 + SLO + scope），生成网关路由、SDK 与文档；契约用 OpenAPI / protobuf / MCP schema</td></tr>
+    <tr><td>计量计费</td><td>OpenTelemetry 采集 → 事件流（Kafka / NATS JetStream）→ 流处理聚合 → 时序/账单库；credit 汇率表带版本；预扣服务独立部署</td></tr>
+    <tr><td>审计</td><td>只追加事件库（按租户哈希链）+ 对象存储冷归档；链头定期锚定到 WORM 存储或透明日志；审计查询与导出走独立服务与独立审计员角色</td></tr>
+    <tr><td>制品</td><td>OCI Registry（Harbor / Distribution）+ ORAS；cosign 签名、SBOM、SLSA provenance；不可变 digest 引用</td></tr>
+    <tr><td>工作流</td><td>Temporal 或 Argo Workflows；Runner 用 K8s Job /  Firecracker 隔离；GPU Runner 直接向 kstack 调度器申请</td></tr>
+    <tr><td>AaaS 沙箱</td><td>Cloud Hypervisor microVM（Kata Containers）或 gVisor；快照存储用分布式文件/对象存储；egress 网关做凭据注入与域名白名单</td></tr>
+    <tr><td>TaaS</td><td>训练侧 verl / TRL / LLaMA-Factory + LoRA adapter；评测侧 Harbor 格式任务 + LLM-as-judge；训练 API 兼容 Tinker 降低迁移成本</td></tr>
+    <tr><td>数据层</td><td>PostgreSQL + RLS 承载控制面 / 账单 / 审计；从 kstack 的 SQLite 迁移需 GORM dialect 切换 + 回填 + 双写对账；时序与日志保留 TSDB / FTS 引擎</td></tr>
+    <tr><td>一致性编排</td><td>Temporal（Saga / 补偿 / Job 状态机）或等价工作流引擎；Idempotency-Key 去重表；日终对账任务</td></tr>
+    <tr><td>密钥与加密</td><td>Vault / 云 KMS 做信封加密与静态加密；证书自动轮换；Secret 扫描进 CI 与制品入库门禁</td></tr>
+    <tr><td>备份与演练</td><td>加密异地版本化备份 + 定期自动化恢复演练 + 演练报告归档；审计链头 WORM 锚定</td></tr>
+    <tr><td>SLO 与事故</td><td>OpenTelemetry + Prometheus / Grafana 定义 SLI 与错误预算；告警路由与 on-call（PagerDuty 类）；状态页与复盘模板</td></tr>
+    <tr><td>MaaS / IaaS</td><td>kstack（MaaS 全链路）+ ZStack Cloud / 公有云 provider（IaaS）；利用现有 6 家 provider 同步与零入站端口 agent</td></tr>
+  </tbody>
+</table>
+
+<h2>0x0C : 风险与待定决策</h2>
+<div class="grid">
+  <div class="card"><b>权限半径</b><span>单 Key 覆盖全平台，一旦泄露影响面最大。缓解：子 Key、预算硬顶、scope 白名单、即时吊销、异常行为检测。</span></div>
+  <div class="card"><b>重复计费</b><span>嵌套调用与网关/服务双统计是高频事故。缓解：计量点归属规则 + billing_parent + 事件幂等。</span></div>
+  <div class="card"><b>长任务预算</b><span>训练与挂起 actor 可能跑数天。缓解：预扣 + 心跳续扣 + 到期策略（终止 / 降级 / 通知）。</span></div>
+  <div class="card"><b>控制面单点</b><span>所有服务依赖统一 IAM，挂了全平台停摆。缓解：本地策略快照、吊销走独立广播、账单链路完全异步。</span></div>
+  <div class="card"><b>隔离粒度不齐</b><span>VPC / 副本 / 函数 / actor 沙箱各不相同。缓解：服务目录显式声明隔离等级，合规按最弱环评估。</span></div>
+  <div class="card"><b>审计不可抵赖</b><span>管理员能删日志就等于没有审计。缓解：哈希链 + 外部锚定、审计员权限分离、审计查询自身留痕、敏感动作先落审计再执行。</span></div>
+  <div class="card"><b>多租户改造</b><span>单租户 SQLite 上叠 IAM 是假隔离。缓解：先垫片再迁 PG + RLS，强制查询门禁，按租户分批切流并可回退。</span></div>
+  <div class="card"><b>跨服务不一致</b><span>发布成功但部署失败、扣费成功但任务卡死。缓解：幂等键 + Saga 补偿 + Job 状态机 + 日终对账。</span></div>
+  <div class="card"><b>吵闹邻居</b><span>单租户训练占满 GPU 使他人推理饿死。缓解：资源池分级、优先级抢占、加权公平队列、超卖保护线。</span></div>
+  <div class="card"><b>密钥泄露</b><span>一把 Key 权限半径大。缓解：短时子 Key、双活轮换、吊销广播、泄露 runbook 与审计回溯。</span></div>
+  <div class="card"><b>数据合规</b><span>SaaS 跨源聚合与训练回流涉及授权与来源。缓解：source/method/as_of 全链路标注、只采授权源、字段只增不改。</span></div>
+</div>
+<h3>需要你拍板的五件事</h3>
+<ol>
+  <li><b>部署形态</b>：单区域单集群起步，还是一开始就要多区域自治？这决定控制面是否必须做成主备 + 分区计量。</li>
+  <li><b>IaaS 边界</b>：自建 ZStack 私有云做完整 IaaS，还是只做「对接已有云 + 资源池抽象」？后者能省掉一大块。</li>
+  <li><b>计费模型</b>：纯预付费 credit，还是后付费 + 预算闸？影响预扣/结算的复杂度与风控强度。</li>
+  <li><b>生态策略</b>：SaaS 资源层与 Packages 是否允许第三方注册与分成？决定服务目录是否需要开放审核与计量对账。</li>
+  <li><b>多租户改造力度</b>：接受「网关垫片 + 映射」的内测方案先上线，还是一开始就做 kstack 数据层的 PostgreSQL / RLS 改造？这是 P0 工作量与隔离真实性的取舍，其余四项决策都受它影响。</li>
+</ol>
+
+<h2>0x0D : 多租户与资源治理</h2>
+<p>这是本轮审计发现的<b>最致命缺口</b>：v0.2 假设了 tenant / project / env 存在，却没设计它们如何落地。「一把 Key」若只是给单租户系统加一层认证，等于把全部租户数据放进同一个库、同一个调度队列，权限再细也没用。</p>
+
+<h3>13.1 隔离模型与数据层演进</h3>
+<ul>
+  <li><b>三层边界</b>：tenant（计费与合规主体）→ project（资源与配额边界）→ env（dev / staging / prod，发布与预算边界）。所有表、所有查询、所有缓存键、所有计量事件都必须带齐三者。</li>
+  <li><b>隔离分级</b>：共享表 + 行级策略（默认）／独立 schema（付费大客）／独立库或独立集群（合规客户）。分级写在服务目录里，不靠人工约定。</li>
+  <li><b>强制门禁</b>：把「每个持久化查询必须带 tenant 上下文」做成静态检查，像 kstack 现有的 <code>i18n-check</code> / <code>check-architecture</code> 一样进 CI；ORM 层统一注入 tenant 过滤，禁止裸查询绕过。</li>
+  <li><b>现实差距</b>：kstack 当前是单管理员 + 单 SQLite 文件（<code>kstack.db</code> 等 5 个库），无 tenant_id。必须先迁到 PostgreSQL + RLS（GORM 换 dialect、写迁移与回填脚本），否则多租户无从谈起。详见 17.2。</li>
+</ul>
+
+<h3>13.2 组织与权限模型</h3>
+<table>
+  <thead><tr><th style="width:22%">角色</th><th>典型权限</th><th style="width:20%">约束</th></tr></thead>
+  <tbody>
+    <tr><td>平台管理员</td><td>全局配置、服务目录、配额模板</td><td>不能读审计原始库、不能改审计记录</td></tr>
+    <tr><td>组织所有者</td><td>成员、预算、子 Key、环境</td><td>受组织预算上限约束</td></tr>
+    <tr><td>开发者</td><td>部署、训练、构建、调用</td><td>按 env 授权，prod 需审批</td></tr>
+    <tr><td>审计员</td><td>只读审计检索、合规包导出</td><td>与平台管理员权限互斥</td></tr>
+    <tr><td>财务 / 账单只读</td><td>账单、成本、发票</td><td>不可改预算、不可调账</td></tr>
+    <tr><td>服务账号</td><td>限定 URN scope 的机器身份</td><td>不得交互登录，短时凭据</td></tr>
+  </tbody>
+</table>
+<p>补 SSO / SCIM 做成员生命周期，人类账号与服务账号分离；高危操作走 <b>JIT 临时提权</b>（申请 → 审批 → 限时 → 自动回收 → 全链路审计），杜绝常驻超级管理员。所有提权与角色变更都是 06 章的管理动作审计事件。</p>
+
+<h3>13.3 配额不等于容量仲裁</h3>
+<p>v0.2 只写了 quota 与 budget，缺的是「物理资源不够时谁先用」。<b>quota</b> 限并发/速率上限、<b>budget</b> 限金额上限，任一触顶拒绝新请求；但两者都不解决吵闹邻居。必须补：</p>
+<ul>
+  <li><b>资源池分级</b>：预留（承诺折扣、保障）／按需（加权公平）／抢占式（Spot，可被回收），并明确超额订阅比例与超卖保护线。</li>
+  <li><b>优先级与抢占</b>：在线推理 SLO &gt; 交互式训练 &gt; 批量训练 / 批量推理 &gt; CI 构建；低优先级被抢占时按 checkpoint 恢复并退还预扣预算。</li>
+  <li><b>公平调度</b>：按 tenant/project 加权公平队列或 DRF（主导资源公平），GPU 显存、卡时、RDMA 带宽、存储 IO 多维度同时计量，避免单租户占满 GPU 导致他人推理饿死。</li>
+  <li><b>容量闭环</b>：用 meter 事件反推容量与成本归因（内部成本 vs 售价、毛利），指导扩容与售卖上限。</li>
+</ul>
+
+<h2>0x0E : 可靠性、一致性与容灾</h2>
+<h3>14.1 幂等、状态机与跨服务补偿</h3>
+<p>九类服务里大量操作跨越控制面与执行面，v0.2 没有定义「做了一半失败怎么办」——这会直接造成账单与状态不一致。补三条硬规则：</p>
+<ul>
+  <li>所有写操作携带 <code>Idempotency-Key</code>（24h 去重窗口），长 Job 走显式状态机：<code>created → reserved → running → succeeded | failed | cancelled → settled</code>，<code>settled</code> 之前预算不得释放。</li>
+  <li>跨服务用 <b>Saga + 补偿</b>，不做分布式事务。三个必须预先写好补偿的场景：<br>
+    ① Releases 已 promote 但 MaaS 部署失败 → 自动回滚 release 指针、退还预留、发事件；<br>
+    ② 训练 Job 卡死但预算持续预扣 → 租约 + 心跳 + 超时补偿，孤儿任务定时清理；<br>
+    ③ 计量事件重复投递 / 账单已出 → event_id 幂等 + 日终对账补差，绝不重扣。</li>
+  <li>Job 状态与预算结算必须同事务域（或显式对账），「任务成功但没结算」与「扣了钱但任务没跑」都算 P0 事故。</li>
+</ul>
+
+<h3>14.2 降级矩阵</h3>
+<table>
+  <thead><tr><th style="width:24%">故障</th><th>行为</th><th style="width:22%">禁止</th></tr></thead>
+  <tbody>
+    <tr><td>控制面不可用</td><td>数据面按本地策略快照与脏路由表继续服务</td><td>禁止重新鉴权依赖远程调用</td></tr>
+    <tr><td>审计不可用</td><td>普通动作异步排队重试；<b>敏感动作直接拒绝</b></td><td>禁止静默放行</td></tr>
+    <tr><td>计费 / 计量不可用</td><td>本地令牌桶继续预算判定，事件落本地盘后补投</td><td>禁止丢计量事件</td></tr>
+    <tr><td>网关单实例故障</td><td>无损重启 + 连接排空，路由表从快照恢复</td><td>禁止有状态会话绑死实例</td></tr>
+    <tr><td>单区域不可用</td><td>按 URN 前缀重路由到健康区，降级为只读或排队</td><td>禁止跨区搬运受限数据</td></tr>
+    <tr><td>GPU 池耗尽</td><td>按 13.3 优先级排队 / 抢占 / 拒绝并给出原因码</td><td>禁止无限等待不释放预算</td></tr>
+  </tbody>
+</table>
+
+<h3>14.3 备份、RPO / RTO 与演练</h3>
+<ul>
+  <li><b>分级目标</b>：控制面元数据 RPO≈0 / RTO &lt; 15min；账单与计量 RPO &lt; 1min；<b>审计 RPO = 0 且不可丢</b>；日志与 Trace 允许有损。</li>
+  <li><b>备份</b>：加密 + 异地 + 版本化，覆盖控制面数据库、服务目录、策略、制品清单与 KMS 密钥托管材料；<b>没有定期恢复演练的备份不算备份</b>，演练结果进审计报告。</li>
+  <li><b>审计链是最后防线</b>：06 章的哈希链头外部锚定，即使控制面被完全摧毁也能验证历史未被篡改。</li>
+  <li><b>爆炸半径</b>：按 tenant / region / 服务切故障域，灰度与特性开关可按租户比例放量；禁止单一主 Key 或单控制面把全平台带走。</li>
+</ul>
+
+<h2>0x0F : 安全与合规补完</h2>
+<h3>15.1 密钥生命周期与泄露响应</h3>
+<p>v0.2 有轮换与吊销的<b>能力</b>，没有<b>流程</b>。补：主 Key 90 天提醒轮换、子 Key 30 天、SVID 分钟级、双活轮换窗口；平台自身密钥走 KMS 信封加密与静态加密；制品与日志做 Secret 扫描。<b>泄露响应 runbook</b>：检测 → 立即吊销 → 轮换受影响凭据 → 用 06 章审计链回溯首次使用时间与影响面清单 → 冻结相关预算 → 通知与复盘，全程可导出为证据包。</p>
+
+<h3>15.2 东西向零信任与边缘防护</h3>
+<p>v0.2 只覆盖了南北向网关与 AaaS egress。补：服务间一律 mTLS（SVID）+ 网络策略默认拒绝；管理面与数据面网络分离；TLS 证书自动轮换；WAF / DDoS / 速率异常检测放在统一网关之前；跨区域与跨云走私有连接而非公网；语义缓存与前缀亲和路由<b>必须按 tenant 分区</b>，防跨租户缓存污染与信息泄露。</p>
+
+<h3>15.3 数据生命周期、驻留与血缘</h3>
+<ul>
+  <li><b>数据分级</b>：公开 / 内部 / 机密 / 受限，决定加密、留存、导出与审批要求。</li>
+  <li><b>驻留</b>：tenant 绑定 region，数据与派生模型不得跨区；训练产物继承数据集的驻留标签（14 章跨区降级时据此拒绝）。</li>
+  <li><b>删除权</b>：删除必须传播到备份、冷归档、缓存、制品副本与下游模型；审计记录按合法例外保留但需去标识化。</li>
+  <li><b>血缘</b>：<code>数据集 → 训练 Job → adapter → Release → 推理部署 → 请求轨迹 → 下一轮样本</code> 全程可追溯，是模型复现、合规举证和「哪个版本用了被删除数据」的唯一依据。</li>
+</ul>
+
+<h3>15.4 AI 特有威胁</h3>
+<p>prompt 注入与越权工具调用（MCP tool 参数校验 + 最小 scope + 高危动作人工确认）、Agent 沙箱逃逸与横向移动、制品与权重的供应链投毒（已有签名 / SBOM / SLSA）、训练数据泄露与成员推断、输出滥用检测、以及多租户场景下的模型侧信道。这些不属于传统云安全清单，必须单独列入门禁。</p>
+
+<h2>0x10 : 平台契约与运营</h2>
+<h3>16.1 统一 API 契约</h3>
+<p>「一把 Key 打天下」的另一半是「一套错误语义打天下」。v0.2 没定这层，九类服务各写各的接口会毁掉体验。补：URL 主版本 + 6 个月弃用期 + <code>Sunset</code> / <code>Deprecation</code> 响应头；统一错误信封 <code>{error, code, params}</code> 与中英本地化（<b>直接沿用 kstack 的 messages + i18n-check 机制</b>）；统一 <code>Idempotency-Key</code>、分页排序、<code>RateLimit-*</code>、<code>request-id</code> / <code>trace-id</code> 回传；SDK、CLI、文档与 MCP tool schema 从同一份契约生成。</p>
+
+<h3>16.2 SLO 与事故响应</h3>
+<p>按服务定义 SLI：网关可用性与 P99、首 token 延迟、任务成功率、计量入库延迟、<b>审计写入成功率</b>；配套错误预算、告警路由、on-call、runbook、事后复盘与状态页。错误预算耗尽时冻结非必要发布——这条把 07 章的 Releases 与运营闭环接上了。</p>
+
+<h3>16.3 商业化运营</h3>
+<p>套餐、试用额度、发票、对账、退款与争议处理；成本归因到 tenant / project / trace 以核算毛利；任何人工调账必须双人审批 + 落入 06 章「计费与预算」审计事件，并可与 meter 事件逐条勾稽。</p>
+
+<h2>0x11 : 覆盖度审计矩阵与迁移路径</h2>
+<h3>17.1 审计结果</h3>
+<table>
+  <thead><tr><th style="width:30%">维度</th><th style="width:16%">v0.2 状态</th><th>本版落点</th></tr></thead>
+  <tbody>
+    <tr><td>服务分层 / 依赖链 / 服务目录 URN</td><td><span class="tag t">已覆盖</span></td><td>02、03、04</td></tr>
+    <tr><td>统一网关 / 身份 / 计量 / 供应链</td><td><span class="tag t">已覆盖</span></td><td>04、05、07</td></tr>
+    <tr><td>审计与合规平面</td><td><span class="tag t">v0.2 补齐</span></td><td>06</td></tr>
+    <tr><td>控制面 / 数据面分离</td><td><span class="tag t">已覆盖</span></td><td>08，降级细化到 14.2</td></tr>
+    <tr><td>多租户数据隔离与数据层演进</td><td><span class="tag b">缺失</span></td><td>13.1、17.2</td></tr>
+    <tr><td>RBAC / SSO / JIT 提权</td><td><span class="tag b">缺失</span></td><td>13.2</td></tr>
+    <tr><td>配额 vs 容量仲裁 / 公平调度</td><td><span class="tag b">缺失</span></td><td>13.3</td></tr>
+    <tr><td>幂等 / Saga / Job 状态机</td><td><span class="tag b">缺失</span></td><td>14.1</td></tr>
+    <tr><td>降级矩阵 / 备份 / RPO·RTO / 演练</td><td><span class="tag b">缺失</span></td><td>14.2、14.3</td></tr>
+    <tr><td>密钥泄露响应 / KMS / 静态加密</td><td><span class="tag b">缺失</span></td><td>15.1</td></tr>
+    <tr><td>东西向零信任 / 边缘防护</td><td><span class="tag b">缺失</span></td><td>15.2</td></tr>
+    <tr><td>数据分级 / 驻留 / 删除权 / 血缘</td><td><span class="tag b">缺失</span></td><td>15.3</td></tr>
+    <tr><td>AI 特有威胁</td><td><span class="tag b">缺失</span></td><td>15.4</td></tr>
+    <tr><td>统一 API 契约 / SDK 生成</td><td><span class="tag b">缺失</span></td><td>16.1</td></tr>
+    <tr><td>SLO / 错误预算 / 事故响应</td><td><span class="tag b">缺失</span></td><td>16.2</td></tr>
+    <tr><td>商业化运营 / 成本归因</td><td><span class="tag b">缺失</span></td><td>16.3</td></tr>
+    <tr><td>具体 SLO 数值、合规认证范围、价目与毛利模型</td><td><span class="tag a">待业务输入</span></td><td>需产品 / 法务 / 财务定，见 17.3</td></tr>
+  </tbody>
+</table>
+
+<h3>17.2 从 kstack 单租户演进到多租户的迁移路径</h3>
+<p>这是把蓝图落到现有代码的关键一步，也是最容易被低估的风险。分三步走，每步可独立回滚：</p>
+<ol>
+  <li><b>垫片期</b>：kstack 保持单租户不动，平台网关与 IAM 在前，维护「外部 tenant/project → kstack 内部 namespace / API key」映射；所有计量与审计在平台侧补全，kstack 只当执行器。此时隔离靠映射与网关策略，<b>不是真隔离</b>，只适用于内测。</li>
+  <li><b>数据层改造</b>：给 <code>deployments / instances / api_keys / usage_*</code> 等核心表加 <code>tenant_id / project_id / env</code>，加 RLS 与强制查询门禁；SQLite → PostgreSQL（GORM dialect 切换、迁移与回填脚本、双写验证），五个库按重要性逐个迁，<code>ux.db</code> 之类可重建的库直接舍弃重来。</li>
+  <li><b>职责拆分</b>：IAM / 计费 / 审计 / 服务目录独立成平台控制面，kstack 收敛为 MaaS 资源执行面，通过短时 SVID 接收指令；旧管理 API 保留兼容层并在弃用期后下线。全程双写 + 对账 + 按租户分批切流，任一批次异常可回退到垫片期映射。</li>
+</ol>
+
+<h3>17.3 本版仍未展开（需要业务输入）</h3>
+<ul>
+  <li><b>具体 SLO 数值与错误预算</b>：取决于目标客户等级与赔付条款。</li>
+  <li><b>合规认证范围</b>：等保 / SOC 2 / ISO 27001 中做哪些，决定审计留存期、驻留与证据包格式。</li>
+  <li><b>价目与毛利模型</b>：credit 汇率、预留折扣、Spot 定价，决定 13.3 的容量售卖上限。</li>
+  <li><b>多区域拓扑细节</b>：控制面主备还是多活、跨区计量汇聚方式，取决于第 12 章待拍板的第一项。</li>
+</ul>
+
+<h2>0x12 : 必要功能边界（收敛版）</h2>
+<p><b>为什么要收敛</b>：v0.5 按竞品全集做功能对照，把 Bedrock / Dify / Vercel / GitHub 的能力都算成「缺口」，清单膨胀且偏离定位。本平台的定位是<b>「异构资源与 AI 能力的统一供给平面」</b>，不是「AI 应用开发平台」；竞品有，不等于我们必须有。本章按三条标准重新裁剪：满足其一才算必要。</p>
+<ol>
+  <li><b>一把 Key 的承诺闭环</b>：认证 → 授权 → 计量 → 账单 → 可追责，缺一环平台不成立。</li>
+  <li><b>多租户可交付</b>：数据/资源隔离、最小权限、发布与回滚、故障可恢复，缺一环不能对外服务。</li>
+  <li><b>用户能用得上</b>：一组 API/SDK + 一个控制台 + 一份文档，缺一环机制无人可用。</li>
+</ol>
+
+<div class="diagram">
+  <p class="diagram-cap">必要功能六支柱　/　只保留一把 Key 承诺闭环、多租户可交付、用户能用得上三条标准内的能力</p>
+<svg viewBox="0 0 680 310" width="100%" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>必要功能六支柱</title>
+<desc>一把 API Key 之下只保留六项必要能力：凭证与授权、网关与路由、计量与账单、审计与隔离、发布与回滚、控制台与 API；语义内容层、竞品对齐功能与生态市场明确不做。</desc>
+<defs>
+  <marker id="coreA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </marker>
+</defs>
+<rect x="0" y="0" width="680" height="310" rx="14" fill="#F8F6F0"/>
+<g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">
+<rect x="250" y="26" width="180" height="50" rx="8" fill="#141413"/>
+<text x="340" y="55" font-size="12.5" fill="#FDFCF9" text-anchor="middle">一把 API Key</text>
+<path d="M340 76 L340 92 M125 92 L555 92 M125 92 L125 102 M340 92 L340 102 M555 92 L555 102" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#coreA)"/>
+
+<rect x="30" y="104" width="190" height="52" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="125" y="125" font-size="12.5" fill="#141413" text-anchor="middle">凭证与授权</text>
+<text x="125" y="143" font-size="11" fill="#7A756C" text-anchor="middle">认证 · scope · 预算</text>
+<rect x="245" y="104" width="190" height="52" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="340" y="125" font-size="12.5" fill="#141413" text-anchor="middle">网关与路由</text>
+<text x="340" y="143" font-size="11" fill="#7A756C" text-anchor="middle">LLM · API · MCP · 回退</text>
+<rect x="460" y="104" width="190" height="52" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="555" y="125" font-size="12.5" fill="#141413" text-anchor="middle">计量与账单</text>
+<text x="555" y="143" font-size="11" fill="#7A756C" text-anchor="middle">meter · credit · 结算</text>
+
+<rect x="30" y="170" width="190" height="52" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="125" y="191" font-size="12.5" fill="#141413" text-anchor="middle">审计与隔离</text>
+<text x="125" y="209" font-size="11" fill="#7A756C" text-anchor="middle">哈希链 · 租户 · RLS</text>
+<rect x="245" y="170" width="190" height="52" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="340" y="191" font-size="12.5" fill="#141413" text-anchor="middle">发布与回滚</text>
+<text x="340" y="209" font-size="11" fill="#7A756C" text-anchor="middle">不可变版本 · 别名</text>
+<rect x="460" y="170" width="190" height="52" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="555" y="191" font-size="12.5" fill="#141413" text-anchor="middle">控制台与 API</text>
+<text x="555" y="209" font-size="11" fill="#7A756C" text-anchor="middle">SDK · CLI · 文档</text>
+
+<rect x="30" y="240" width="620" height="48" rx="8" fill="#4E60FF"/>
+<text x="340" y="259" font-size="12.5" fill="#FDFCF9" text-anchor="middle">明确不做：语义内容层 / 竞品对齐功能 / 生态市场</text>
+<text x="340" y="277" font-size="11" fill="#FDFCF9" text-anchor="middle">Prompt 注册表 · RAG · 向量库 · LLMOps 产品 · 护栏产品 · 可视化编排 · 市场分成</text>
+</g>
+</svg>
+</div>
+<h3>12.1 必要功能清单</h3>
+<p>共 12 项。每项写的是<b>最小交付</b>，不是完整产品；够用即可，不追求对齐竞品。</p>
+<table>
+  <thead><tr><th style="width:6%">#</th><th style="width:18%">能力</th><th>最小交付</th><th style="width:26%">为什么必要</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>统一凭证</td><td>一把 Key + tenant / project / env 三层 + scope 与预算闸 + 短时身份令牌交换（第三方凭据保管见 0x14）</td><td>核心承诺；没有则「一把 Key」不成立</td></tr>
+    <tr><td>2</td><td>统一网关</td><td>LLM / API / MCP 路由 + 限流 + 失败回退</td><td>所有服务的唯一入口</td></tr>
+    <tr><td>3</td><td>计量与账单</td><td>统一 meter 事件 + credit 归一化 + 预扣/结算 + 按租户账单</td><td>计费闭环；缺了无法商业化</td></tr>
+    <tr><td>4</td><td>审计</td><td>只追加事件 + 哈希链 + 敏感动作先落审计再执行</td><td>可追责；单 Key 权限半径大的必要制衡</td></tr>
+    <tr><td>5</td><td>租户隔离</td><td>tenant_id + RLS + 强制查询门禁（默认共享表，不做独立集群分级）</td><td>多租户数据边界</td></tr>
+    <tr><td>6</td><td>最小权限</td><td>管理员 / 开发者 / 审计员三类角色</td><td>审计员与管理权分离即可，不必六角色矩阵与 JIT</td></tr>
+    <tr><td>7</td><td>服务目录</td><td>URN 注册 scope 与计量单位，网关据此生成路由</td><td>避免九套服务各写一遍鉴权</td></tr>
+    <tr><td>8</td><td>一致性</td><td>幂等键 + Job 状态机 + 三个补偿场景（发布失败、任务卡死、计量重投）</td><td>防账单与资源状态错乱</td></tr>
+    <tr><td>9</td><td>发布闭环</td><td>一套共享原语：不可变版本 + 别名 + 回滚，覆盖 PaaS / MaaS / TaaS / Releases</td><td>能力交付与回退的最小闭环</td></tr>
+    <tr><td>10</td><td>事件通知</td><td>状态变化 → SSE / Webhook，供 Actions、审计、通知消费</td><td>替代各层自建轮询；先做最小投递</td></tr>
+    <tr><td>11</td><td>用户入口</td><td>一个控制台 + 一套 REST + 一份 SDK/CLI + 一份文档</td><td>机制产品化，否则无人可用</td></tr>
+    <tr><td>12</td><td>各层最小能力</td><td>IaaS 实例与配额；MaaS 部署 + /v1 + 扩缩容（kstack 已有）；TaaS 数据集 / Job / checkpoint / 评测门禁 / adapter 部署；PaaS Git→Build→Deploy→Rollback + Secrets；AaaS 沙箱 + 挂起唤醒 + 检查点 + 零凭据 egress；SaaS 统一 schema + 按结果计费；Actions workflow + 不可变制品 + 签名 + 发布</td><td>每层只做能跑通闭环的最小集，不补全产品线</td></tr>
+  </tbody>
+</table>
+
+<h3>12.2 明确不做</h3>
+<table>
+  <thead><tr><th style="width:22%">域</th><th>不做的功能</th><th style="width:30%">理由</th></tr></thead>
+  <tbody>
+    <tr><td>语义内容层</td><td>Prompt 注册表、RAG / 知识库、向量库与 embedding / rerank 服务、独立 LLMOps 产品（标注队列、trace 生成数据集、CI 门禁）、内容护栏产品、可视化多 agent 编排</td><td>属「AI 应用开发平台」，不是资源供给平面；用户可在 PaaS 自建或接第三方</td></tr>
+    <tr><td>网关高级</td><td>虚拟 Key 分层预算矩阵、BYOK 产品化、语义缓存、多种负载均衡算法、请求回放、Admin UI、guardrail 插件市场</td><td>现有预算闸 + 路由 + 回退已够，其余是规模化后的优化</td></tr>
+    <tr><td>PaaS 高级</td><td>monorepo、ISR / 边缘中间件、Log Drains、构建缓存、自定义域名与 TLS、团队席位</td><td>后置，不影响最小部署闭环</td></tr>
+    <tr><td>IaaS 高级</td><td>NACL / Flow Logs / EIP / LB、CDP 容灾、V2V 迁移、镜像市场、Terraform Provider</td><td>0x0D 的配额与隔离已覆盖必要条件</td></tr>
+    <tr><td>供应链高级</td><td>workflow 复用 / matrix、OIDC 联合身份、环境保护规则、CODEOWNERS、多格式包仓库、CVE 扫描、自动 release notes</td><td>先做到「能构建、能验签、能回滚」即可</td></tr>
+    <tr><td>运营与生态</td><td>状态页、SLA 赔付、工单系统、市场分成、成本预测、发票、多区域多活、ZDR / 模型卡 / 合规认证</td><td>商业化与合规阶段再补</td></tr>
+    <tr><td>治理项收敛</td><td>0x11 中的 JIT 提权、SSO / SCIM、独立集群隔离分级、混沌工程、法律保全 hold、SIEM 导出</td><td>治理机制保留最小集，其余可后置</td></tr>
+  </tbody>
+</table>
+
+<h3>12.3 对前版的修正</h3>
+<ul>
+  <li><b>撤销 v0.5 的「语义内容层整体缺位是最大缺口」判断</b>：那是按竞品全集对照得出的结论，不符合本平台定位。其中只有「评测门禁」与「检查点 / HITL」因分别内聚于 TaaS 与 AaaS 的最小闭环而保留在第 12 项里。</li>
+  <li><b>0x0A 的 P0 路线回调</b>：删除「AI 语义层」交付线；「开发者门户」收敛为「最小控制台 + SDK/CLI + 文档」。</li>
+  <li><b>0x11 覆盖度矩阵</b>保留为治理维度的历史审计记录，不代表其中每一项都要在 P0 交付；实际交付以本章 12 项为准。</li>
+  <li><b>判定原则</b>：新增功能前先问「缺了它，一把 Key 的闭环是否断掉 / 多租户是否不能交付 / 用户是否用不上」；三问皆否则不做。</li>
+</ul>
+
+<h2>0x13 : 技术选型与工程架构（aster × kstack）</h2>
+<p><b>调研前提</b>：本章对 <code>/Users/roylin/code/aster</code> 为当前代码实证（Rust workspace、云侧组件、执行内核、工程门禁）；对 kstack 采用<b>今天上午在该仓库直接读码与跑通 <code>make ui</code> 的实证记录</b>（已固化在 0x09 映射表、0x11 迁移路径与工作日志）。<b>kstack 源码目录当前已不在本机</b>，仅存 <code>/tmp/kstack-e2e/</code> 运行产物（含 5 个 SQLite 库）；代码级版本与文件复核需重新检出 <code>kense-labs/kstack</code>。0x0B 的早期选型建议为演进记录，<b>以本章为准</b>。</p>
+
+<h3>13.1 两者对照</h3>
+<table>
+  <thead><tr><th style="width:16%">维度</th><th style="width:42%">aster（实证）</th><th>kstack（上午实证记录）</th></tr></thead>
+  <tbody>
+    <tr><td>定位</td><td>终端 / 桌面 / 可嵌入的 <b>Agent 执行内核</b> + 云控制面雏形</td><td>轻量 GPU 集群与 <b>MaaS</b> 平台（server 控制面 + agent 节点）</td></tr>
+    <tr><td>语言工具链</td><td>Rust 1.97.1 / edition 2024 / resolver 3，根 workspace 约 160 members；<code>apps/api</code>、<code>apps/cloud</code>、<code>apps/control-plane</code> 各为独立 workspace 与 lockfile</td><td>Go 1.26 单 module；chi + GORM + modernc/go-sqlite + websocket + yamux + gojq + starlark</td></tr>
+    <tr><td>服务端</td><td>axum 0.8 / tonic 依赖（无 .proto）/ rmcp 0.8.5 / ACP 0.10.4；PostgreSQL + aster-orm，NATS/Iggy Outbox，aster-flow Saga</td><td>单二进制 + <code>go:embed</code> 内嵌 UI 与三平台 agent；5 个 SQLite 库；335 条管理面 REST；75 个 server 子包</td></tr>
+    <tr><td>前端</td><td>React 19 + Rsbuild 2 + Radix + Tailwind4 + Bun workspaces；Studio 为 Tauri 2</td><td>React 19 + Rsbuild 2 + i18next / ECharts / Radix；23 个 i18n 命名空间</td></tr>
+    <tr><td>核心资产</td><td>Core / Effect 的 Fact Log 与带键幂等转移、ACP 会话协议、gateway 快照准入、cloud 的 Organization→Project→Environment→Grant、contracts + openapi/v1.json 快照</td><td>392 模型 / 1235 规格、异构调度与可解释放置、dGPU / PD / sleep-wake、OpenAI /v1、agent 零入站端口外连、离线分发、L1–L4 测试与 i18n / 架构门禁</td></tr>
+    <tr><td>主要约束</td><td>api / cloud / control-plane 三处重复的 auth / billing / config 副本；sandbox / box / oci-runtime 源码仅存 <code>.tmp</code> 快照；harness-gateway 仍是设计文档</td><td>单管理员 + 单 SQLite、无 tenant_id / RLS、GORM dialect 绑定、UI 与 server 同仓 embed</td></tr>
+  </tbody>
+</table>
+
+<div class="diagram">
+  <p class="diagram-cap">工程架构　/　四个独立构建单元 + 一份契约包，按进程边界组合而非统一语言</p>
+<svg viewBox="0 0 680 400" width="100%" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>技术选型与工程架构</title>
+<desc>控制台经唯一网关接入控制面、MaaS 执行面与 Agent 执行内核三个独立构建单元；四者共享一份契约包，底层为 PostgreSQL 加 RLS 与 NATS Outbox。</desc>
+<defs>
+  <marker id="engA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </marker>
+</defs>
+<rect x="0" y="0" width="680" height="400" rx="14" fill="#F8F6F0"/>
+<g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">
+<rect x="250" y="24" width="180" height="48" rx="8" fill="#141413"/>
+<text x="340" y="44" font-size="12.5" fill="#FDFCF9" text-anchor="middle">console</text>
+<text x="340" y="62" font-size="11" fill="#FDFCF9" text-anchor="middle">React 19 · Rsbuild</text>
+<path d="M340 72 L340 96" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#engA)"/>
+<rect x="130" y="98" width="420" height="52" rx="8" fill="#141413"/>
+<text x="340" y="119" font-size="12.5" fill="#FDFCF9" text-anchor="middle">gateway · 唯一边缘</text>
+<text x="340" y="137" font-size="11" fill="#FDFCF9" text-anchor="middle">Rust · 快照准入 · OpenAI 兼容</text>
+<path d="M340 150 L340 174 M125 174 L555 174 M125 174 L125 194 M340 174 L340 194 M555 174 L555 194" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#engA)"/>
+<rect x="30" y="196" width="190" height="60" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="125" y="219" font-size="12.5" fill="#141413" text-anchor="middle">control-plane</text>
+<text x="125" y="238" font-size="11" fill="#7A756C" text-anchor="middle">Rust · PG · Outbox</text>
+<rect x="245" y="196" width="190" height="60" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="340" y="219" font-size="12.5" fill="#141413" text-anchor="middle">maas</text>
+<text x="340" y="238" font-size="11" fill="#7A756C" text-anchor="middle">Go · kstack</text>
+<rect x="460" y="196" width="190" height="60" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="555" y="219" font-size="12.5" fill="#141413" text-anchor="middle">agent-runtime</text>
+<text x="555" y="238" font-size="11" fill="#7A756C" text-anchor="middle">Rust · Core / ACP</text>
+<path d="M125 256 L125 276 M340 256 L340 276 M555 256 L555 276" fill="none" stroke="#141413" stroke-width="0.9" stroke-dasharray="3 4" opacity="0.5"/>
+<rect x="30" y="278" width="620" height="46" rx="8" fill="#4E60FF"/>
+<text x="340" y="297" font-size="12.5" fill="#FDFCF9" text-anchor="middle">contracts · OpenAPI / URN / 错误码</text>
+<text x="340" y="315" font-size="11" fill="#FDFCF9" text-anchor="middle">Rust · Go · TS 客户端由契约生成</text>
+<path d="M340 324 L340 338" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#engA)"/>
+<rect x="130" y="340" width="420" height="46" rx="8" fill="#141413"/>
+<text x="340" y="359" font-size="12.5" fill="#FDFCF9" text-anchor="middle">PostgreSQL + RLS · NATS Outbox</text>
+<text x="340" y="377" font-size="11" fill="#FDFCF9" text-anchor="middle">账单 · 审计 · 事件</text>
+</g>
+</svg>
+</div>
+<h3>13.2 核心判断：不统一语言，统一契约与进程边界</h3>
+<p>把任一方重写成对方的语言，代价远大于收益，且会丢掉两边最成熟的资产。正确做法是<b>四个独立构建单元 + 一份契约包</b>，用协议与版本化契约连接；语言差异留在单元内部，不越边界。</p>
+<table>
+  <thead><tr><th style="width:18%">层</th><th style="width:30%">选型</th><th>依据与理由</th></tr></thead>
+  <tbody>
+    <tr><td>边缘网关</td><td><b>Rust / aster-gateway</b>（已发布 1.1.1）</td><td>hyper + rustls、JWT/ACL/ACME、standalone 与 cloud-managed 双模式快照（revision / digest / CAS / 过期绑定）、HTTP/1.1+2 / SSE / WS / gRPC / TCP、OpenAI 兼容、inference-key 准入与 TokenReservation。<b>正好是 0x04 的 PEP</b>，不必自研或再引入第三套网关</td></tr>
+    <tr><td>控制面</td><td><b>Rust / aster-cloud 骨架</b></td><td>Organization / Project / Environment / Grant 四层封闭 Scope、PG 单事务 + 幂等键 + 聚合版本 + Outbox → NATS、aster-flow Saga、OpenAPI 3.0.3。直接补上 0x0D 多租户与 0x0E 一致性缺口；<b>只取控制面权威模型，不取 apps/api 桌面扩展面</b></td></tr>
+    <tr><td>MaaS 执行面</td><td><b>Go / kstack，保持独立</b></td><td>调度、模型目录、镜像与权重分发、agent 外连、离线与签名发布都是成熟资产；不重写、不迁 Rust，改为通过短时服务身份接收控制面指令，退化为资源执行器（0x11 三步迁移）</td></tr>
+    <tr><td>AaaS 执行内核</td><td><b>Rust / aster Core + Effect + ACP</b></td><td>单一不可变 Fact Log 折出 view/transitions、已完成 key 不重跑、工具回合边界 checkpoint、confirm/question 停等、Run 终态不被迟到事件回退。长任务恢复与 HITL 直接复用，<b>比自研 actor 运行时省一个数量级</b></td></tr>
+    <tr><td>前端</td><td><b>React 19 + Rsbuild 2 统一</b></td><td>两边技术栈天然一致，控制台只需一套组件与构建链；避开 aster Studio / Tauri 桌面栈</td></tr>
+    <tr><td>数据与事件</td><td><b>PostgreSQL + RLS；NATS Outbox</b></td><td>控制面 / 账单 / 审计走 PG；kstack 五库按重要性迁移，<code>ux.db</code> 可重建即舍弃；Outbox 同时支撑 0x12 的事件通知与 Saga 补偿，替代各层自建轮询</td></tr>
+    <tr><td>本地开发编排</td><td><b>Tilt + docker-compose</b>（仅开发）</td><td>PG16-pgvector / Redis / NATS / S3 / ClickHouse 起本地依赖，<b>不作为生产架构</b></td></tr>
+  </tbody>
+</table>
+
+<h3>13.3 契约层才是架构核心</h3>
+<ol>
+  <li><b>一份 contracts 包</b>：版本化 DTO + URN 服务目录 + HTTP 路径常量 + <code>*_SCHEMA_V1</code>；OpenAPI 由路由表生成并做<b>快照测试防漂移</b>（aster <code>openapi/v1.json</code> 范式），错误信封沿用 kstack 的「稳定 CODE + params + 英文 fallback → UI 本地化」并由 <code>i18n-check</code> 强制一一对应（今早已修复该契约的一处违规）。Rust / Go / TS 客户端全部由契约生成。</li>
+  <li><b>统一 Harness Adapter 作防腐层</b>：aster <code>docs/architecture/harness-gateway.md</code> 把 ACP / HTTP-gRPC / SDK / CLI / A2A 映射为「发现能力、准备、提交、观察、交互、取消恢复、收集结果」7 个操作，<code>TaskSpec / RunBinding / HandoffBundle / TaskResult</code> 不携带协议专属字段。用它收编 kstack 的 agent WS 协议、aster ACP、MCP 与 A2A；该文档自述「尚未编码和联调」，正是可落地的空白位。</li>
+  <li><b>身份边界复用 identity-split</b>：human proof 归 auth、service/workload 归控制面、Key 权威单点，gateway <code>forward-auth</code> 回注 <code>subject/plane/org</code>。对应「一把 Key → 短时 SVID → 网关 PEP」，<b>不要形成两套 Key 体系</b>。</li>
+  <li><b>计费双轨不变量</b>：aster billing 明确「member-plane 商业账本」与「Cloud durable usage ledger」双轨并由架构测试强制（<code>billing_stays_off_cloud_stores</code>）。对应 meter→credit 与账单分离，建议直接采用该不变量并写成架构测试，防止跨库直连。</li>
+  <li><b>不可变身份三元组</b>：<code>(unit_id, generation, canonical_spec_digest)</code> + request_id 与 digest-bound receipts，解决派单丢 ACK、<code>delivery_unknown</code> 与幂等 apply——补上 0x0E 的补偿场景实现细节。</li>
+</ol>
+
+<h3>13.4 工程架构与门禁</h3>
+<table>
+  <thead><tr><th style="width:20%">方面</th><th>设计</th></tr></thead>
+  <tbody>
+    <tr><td>仓库组织</td><td>不合并成巨型 workspace：<code>contracts</code>（语言中立）／<code>control-plane</code>／<code>gateway</code>／<code>maas</code>／<code>agent-runtime</code>／<code>console</code> 六个独立构建单元，内部依赖 path / 版本 pin。借鉴 aster 的 <b>Regime 查表制</b>：路径 → 构建单元 → 测试形态 → 协议形态，写成三层对齐的规约（可执行摘要 / 全文理由 / agent 蒸馏）</td></tr>
+    <tr><td>依赖单一真源</td><td>Rust <code>[workspace.dependencies]</code> + <code>[patch.crates-io]</code>、Go 单 <code>go.mod</code>、JS 单 lockfile；用 <code>cargo metadata</code> / <code>go list</code> 脚本断言内部依赖全本地解析（aster <code>tests/workspace_dependencies.py</code> 范式）</td></tr>
+    <tr><td>契约门禁</td><td>OpenAPI 快照测试、错误码 ↔ i18n 一一对应、URN 注册表 ↔ 路由清单一致性（kstack <code>router_inventory_test.go</code> 范式）；技术债清单用 <b>shrink-only 棘轮</b>，只许漂移集缩小，禁止改基线换绿灯</td></tr>
+    <tr><td>测试分层</td><td>沿用 kstack 的 L1 Sim（单进程 fake）/ L2 多进程 / L3 容器 / L4 云 GPU；合入 aster 的 hermetic 矩阵（按 manifest 分派各构建单元）+ 真容器 campaign 串行（PG/S3，<code>--test-threads=1</code>）</td></tr>
+    <tr><td>发布</td><td>aster 的 tag 命名空间 + 通道清单 + 成对 BUILD_ID/SHA256SUMS + 归档成员白名单 + 发布前反查该 commit 的 CI qualification；通道实现复用 kstack 的 ed25519 签名 index.json + 多源分发与回滚指针</td></tr>
+  </tbody>
+</table>
+
+<h3>13.5 不照搬与风险</h3>
+<ul>
+  <li><b>不统一语言</b>：不把 kstack 迁 Rust，也不把控制面迁 Go；差异留在进程内，边界只走契约。</li>
+  <li><b>不照搬 aster</b>：ACL 单一配置语言（与 Go 生态冲突）、Tauri/Studio 桌面门禁、四套 Cargo.lock 与 edition 混用（迁移期妥协）、spec-kit 多阶段全流程、<code>apps/api</code> 扩展面（IM/日程/邮箱）、<code>use-registry</code> 桌面插件 TUF 树。</li>
+  <li><b>必须收敛 aster 的历史包袱</b>：<code>api</code> / <code>cloud</code> / <code>control-plane</code> 三处重复的 auth / billing / config 源码副本合并为单一权威；billing 在控制面侧另建 usage ledger，不复用 member-plane 商业账本。</li>
+  <li><b>kstack 侧硬约束</b>：单管理员 + 单 SQLite + 无 tenant_id + GORM dialect 绑定 + UI 与 server 同仓 embed —— 控制面必须独立，kstack 退化为执行面；按 0x11 三步迁移（垫片映射 → PG+RLS 双写回填 → 职责拆分），双写对账、按租户分批切流、可回退。</li>
+  <li><b>前提风险</b>：kstack 源码不在本机，且 aster 的 sandbox / box / oci-runtime 仅存 <code>.tmp</code> 快照、harness-gateway 未编码 —— 这三项在落地前需重新检出与补齐，不宜当作现成可用组件排期。</li>
+</ul>
+
+<h3>13.6 与 0x12 的对应及落地顺序</h3>
+<p>本章不新增功能，只给 0x12 的 12 项必要功能选实现载体：凭证 / 目录 / 权限 → control-plane + contracts + gateway forward-auth；计量 / 审计 / 一致性 / 事件 → PG Outbox + 计费双轨 + meter 契约；发布闭环 → contracts 版本 + kstack 已有签名发布通道；控制台与 API → React/Rsbuild + OpenAPI 生成 SDK；各层最小能力 → maas（kstack）+ agent-runtime（aster Core）。</p>
+<p><b>落地顺序</b>：① 先立 <code>contracts</code> 与 Regime 规约，冻结 URN、错误码与 OpenAPI 快照；② gateway 与 control-plane 组成最小「一把 Key」闭环（复用 aster 已实现部分）；③ kstack 以垫片方式接入，验证计量与审计链路；④ agent-runtime 经 Harness Adapter 接入；⑤ 最后做 kstack 数据层 PG+RLS 迁移与职责拆分。</p>
+
+<h2>0x14 : Vault 凭据模型</h2>
+<p><b>补遗</b>：v0.2–v0.7 把凭据当成选型表里的一行「Vault / KMS」与审计字段约束，<b>没有建成独立领域模型</b>。但一把 Key 平台里除主 Key 外，还有第三方上游模型凭据、推理凭据、MCP / connector / workload 凭据，它们需要自己的保管、版本、激活、撤销与注入语义。aster 已有两套实证实现，本章补上统一抽象。</p>
+
+<h3>14.1 aster 里的两套 Vault 模型</h3>
+<table>
+  <thead><tr><th style="width:24%">实现</th><th>领域模型</th><th style="width:20%">迁移归属</th></tr></thead>
+  <tbody>
+    <tr><td>本地上游 Vault<br><code>apps/control-plane/runtime/src/vault.rs</code></td><td><code>VaultScope</code>(org / project / env)、<code>VaultProviderId</code>(boyue / siliconflow / worldmonitor)、<code>VaultCredential</code>(api_key / base_url / secret_ref / version)、<code>Vault { sealed, active, receipts }</code>、<code>VaultApplyReceipt</code>；两阶段 <code>materialize → apply_job</code>，receipt 落盘 <code>upstream-vault.json</code>（上限 100）；<code>/v1/api/__local/vault/*</code> 仅 loopback</td><td>随 <code>kgateway-runtime</code> 迁入 → <code>kvault</code></td></tr>
+    <tr><td>云端 Secret / Credential<br><code>apps/cloud/migrations</code></td><td>14 个迁移：<code>secrets + secret_versions</code>（三层 scope、<code>current_version / aggregate_version</code>、<code>key_id + ciphertext</code>、active / revoked 与 revoked_at 约束）、<code>inference_credentials</code>（<code>aster_inf_</code> 前缀 + argon2id verifier_hash + generation + expires_at）、MCP / connector / workload identity / application delivery credentials 与 delivery · grant receipts</td><td>数据表随 PG 迁入 kserve，归入 <code>kvault</code></td></tr>
+    <tr><td>Studio knowledge_vault<br><code>apps/studio/src-tauri/src/knowledge_vault.rs</code></td><td>个人知识目录初始化（<code>wiki / local</code>），<b>不是凭据保险库</b>；CLI 侧 <code>aster-secrets</code> 同属客户端</td><td>留在 aster，不迁</td></tr>
+  </tbody>
+</table>
+
+<div class="diagram">
+  <p class="diagram-cap">Vault 凭据模型　/　三层 Scope、封存到激活再到撤销，每步产生可审计 receipt</p>
+<svg viewBox="0 0 680 230" width="100%" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>Vault 凭据模型</title>
+<desc>三层 Scope 之下，凭据经 sealed 封存、active 激活、revoked 撤销三态，每步产生 receipt 并写入审计链，egress 注入只传引用。</desc>
+<defs>
+  <marker id="vaultA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </marker>
+</defs>
+<rect x="0" y="0" width="680" height="230" rx="14" fill="#F8F6F0"/>
+<g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">
+<rect x="190" y="20" width="300" height="44" rx="8" fill="#141413"/>
+<text x="340" y="46" font-size="12.5" fill="#FDFCF9" text-anchor="middle">VaultScope · org / project / env</text>
+<path d="M340 64 L340 88" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#vaultA)"/>
+<rect x="30" y="90" width="190" height="56" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="125" y="112" font-size="12.5" fill="#141413" text-anchor="middle">sealed</text>
+<text x="125" y="130" font-size="11" fill="#7A756C" text-anchor="middle">materialize · 密文落盘</text>
+<rect x="245" y="90" width="190" height="56" rx="6" fill="#4E60FF"/>
+<text x="340" y="112" font-size="12.5" fill="#FDFCF9" text-anchor="middle">active</text>
+<text x="340" y="130" font-size="11" fill="#FDFCF9" text-anchor="middle">按 scope × provider 绑定</text>
+<rect x="460" y="90" width="190" height="56" rx="6" fill="#FDFCF9" stroke="#7A756C" stroke-width="0.9"/>
+<text x="555" y="112" font-size="12.5" fill="#141413" text-anchor="middle">revoked</text>
+<text x="555" y="130" font-size="11" fill="#7A756C" text-anchor="middle">终态 · 可审计</text>
+<path d="M220 118 L243 118 M435 118 L458 118" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#vaultA)"/>
+<rect x="30" y="166" width="620" height="44" rx="8" fill="#141413"/>
+<text x="340" y="185" font-size="12.5" fill="#FDFCF9" text-anchor="middle">secret_ref · version · receipt → 审计链</text>
+<text x="340" y="202" font-size="11" fill="#FDFCF9" text-anchor="middle">egress 注入只传引用，明文不出 Vault</text>
+</g>
+</svg>
+</div>
+<h3>14.2 统一抽象与状态机</h3>
+<pre><code>Scope      = (organization_id, project_id, environment_id)
+SecretRef  = urn:plat:vault:secret:{name}
+Credential = { secret_ref, version, ciphertext, key_id, expires_at, aggregate_version }
+State      = sealed | active | revoked
+Receipt    = { receipt_id, scope, provider, secret_ref, version, status, applied_at }
+</code></pre>
+<p>三阶段 <code>materialize</code>（封存密文）→ <code>apply</code>（按 scope × provider 激活为 active binding）→ <code>clear / revoke</code>（终态），每步产生 receipt 并写入 0x06 的审计链。管理面 loopback-only 或经 forward-auth，不暴露公网。</p>
+
+<h3>14.3 与一把 Key 的关系及不变量</h3>
+<ul>
+  <li><b>职责分离</b>：主 Key 只存哈希（0x04）；第三方上游凭据由 Vault 保管；Token Exchange 发的是短时身份，不是凭据本身。</li>
+  <li><b>零明文外泄</b>：egress 注入只传 <code>secret_ref + version</code>，明文不进沙箱、日志、审计事件、wire 与 OpenAPI 快照（呼应 0x06 字段约束）。</li>
+  <li><b>轮换与撤销</b>：轮换必须递增 <code>version</code> 并留 receipt；撤销是终态，<code>aggregate_version</code> 与 <code>state</code> 受数据库约束强校验。</li>
+  <li><b>线协议不改名</b>：<code>aster_inf_</code> 前缀、<code>secret_ref</code> 格式、<code>/v1/api/__local/vault/*</code> 路径属于 wire 值，迁移时只改 crate 名不改值（呼应 0x13 R2）。</li>
+</ul>
+
+<h3>14.4 迁移落点</h3>
+<p>新建 <code>kvault</code>（kserve 的 crates / services），承载本地上游 Vault 逻辑与云端凭据数据模型；<code>kgateway-runtime</code> 保留数据面转发。验收：三层 Scope 隔离、sealed / active / revoked 状态机、版本化凭据与可审计 receipt、明文不落日志、PG 中轮换与撤销约束仍然成立。改造计划 v1.1 的模块清单、命名映射、阶段、风险与验收已同步补齐。</p>
+
+<div class="foot">
+  本蓝图 v0.3 在 v0.2 基础上完成全维度覆盖度审计，新增 13–17 章（多租户与资源治理、可靠性一致性与容灾、安全与合规补完、平台契约与运营、覆盖度矩阵与 kstack 迁移路径），并把幂等/容量/可恢复性写入设计原则、把横切交付并入各阶段路线。参照物信息取自 agentgateway.dev、ate.dev、aisa.one、mint-doc.macaron.xin、flitai-io/gpuworks 公开页面（2026-11-08），并与工作区 kstack 现状比对。所有接口、URN、计量单位与阶段划分均为建议，待评审后细化。v0.4 按工程蓝图风格（三色 / 等宽 / 终端注释）重绘全文档，章节序号采用十六进制 0x00–0x14（正文提及的「第 NN 节」按十进制计，两者等价），并新增 ARCH 01 / ARCH 02 两张架构图。v0.6 将 0x12 收敛为「必要功能边界」。v0.7 基于 /Users/roylin/code/aster 当前代码与 kstack 当日实证记录，新增 0x13 技术选型与工程架构：不统一语言、统一契约与进程边界，给出六构建单元、契约门禁与落地顺序；kstack 源码当前不在本机，代码级复核需重新检出。v0.8 补入 0x14 Vault 凭据模型（aster 的 runtime/vault.rs 与 cloud 凭据数据模型），并在改造计划中同步 kvault 命名与阶段。
+</div>
+
+</div>
+</body>
+</html>

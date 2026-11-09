@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kense OS · 模块架构图集</title>
+<style>
+  :root{ --paper:#F8F6F0; --ink:#141413; --clay:#4E60FF; --note:#7A756C;
+    --chalk:#FDFCF9; --line:#DCD6C8; --soft:#EFEBE1; --page:#EDEAE2; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--page);color:var(--ink);
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"PingFang SC","Microsoft YaHei",monospace;
+    font-size:13px;line-height:1.75}
+  .wrap{max-width:1080px;margin:0 auto;padding:40px 28px 90px}
+  header{background:var(--paper);border:1px solid var(--line);border-left:3px solid var(--ink);
+    border-radius:14px;padding:26px 30px;margin-bottom:20px}
+  h1{font-size:22px;font-weight:500;margin:0 0 6px;letter-spacing:-.01em}
+  .sub{font-size:12.5px;color:var(--note);margin:0 0 14px}
+  .meta{font-size:11.5px;color:var(--note);display:flex;gap:18px;flex-wrap:wrap}
+  h2{font-size:15px;font-weight:500;margin:40px 0 14px;padding-top:12px;
+    border-top:1px solid var(--line);letter-spacing:.02em}
+  p{margin:0 0 12px}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;
+    background:var(--soft);border:1px solid var(--line);border-radius:3px;padding:1px 5px}
+  table{width:100%;border-collapse:collapse;margin:0 0 18px;font-size:12px}
+  th,td{text-align:left;border-bottom:1px solid var(--line);padding:8px 10px;vertical-align:top}
+  th{background:var(--soft);font-weight:500;color:var(--note);font-size:11px;letter-spacing:.02em}
+  .lead{border-left:3px solid var(--ink);background:var(--paper);padding:14px 18px;border-radius:0 8px 8px 0;margin:0 0 20px}
+  .lead p{margin:0}
+  .diagram{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:14px;margin:0 0 12px}
+  .diagram svg{display:block;width:100%;max-width:680px;height:auto;margin:0 auto}
+  .diagram-cap{font-size:11px;color:var(--note);margin:0 0 10px;padding:0 4px;letter-spacing:.02em}
+  .role{background:var(--paper);border-left:3px solid var(--clay);border-radius:0 8px 8px 0;
+    padding:12px 16px;margin:0 0 26px;font-size:12.5px}
+  .role b{font-weight:500}
+  .foot{margin-top:48px;padding-top:20px;border-top:1px solid var(--line);font-size:11.5px;color:var(--note)}
+  @media print{body{background:#fff;font-size:11.5px}.wrap{padding:0;max-width:none}
+    h2{page-break-after:avoid}.diagram,.role,table{page-break-inside:avoid}}
+</style>
+</head>
+<body><div class="wrap">
+<header>
+<h1>Kense OS · 模块架构图集</h1>
+<div class="sub">16 个模块 · 四组 · 与总体架构图（0x02）同一套工程蓝图风格</div>
+<div class="meta"><span>依据 ai-os-architecture.html v2.0</span>
+<span>2026-11-08</span><span>纸底 / 墨黑 / 陶土橙 / 等宽 / 直角折线</span></div>
+</header>
+<div class="lead"><p>图的读法一致：顶部是模块名，其下为输入，中间三个核心能力，随后是对外产出，底部陶土橙条是该模块不可让渡的约束。所有节点只写职责，不放章节号、COMMIT、STDOUT 一类装饰文字。中文作用说明放在每张图下方。</p></div>
+<h2>0x01 : 模块总表</h2>
+<table><thead><tr>
+<th style="width:12%">组</th><th style="width:16%">模块</th>
+<th style="width:48%">作用</th><th style="width:24%">计量单位</th>
+</tr></thead><tbody>
+<tr><td>接入与控制</td><td><b>Unified Gateway</b></td><td>唯一入口与策略执行点。LLM / API / MCP / A2A 统一路由、限流、失败回退与快照准入；forward-auth 回注 subject / plane / org，主 Key 只在边缘出现一次。</td><td>请求数 / 限流</td></tr>
+<tr><td>接入与控制</td><td><b>Identity</b></td><td>一把 Key 的权威单点。库内只存 HMAC / argon2id 哈希与前缀；tenant → project → env 三层 Scope 决定计费、配额与发布边界；RFC 8693 换成 5–15 分钟、单服务 aud 的短时 SVID / JWT。</td><td>—（信任根）</td></tr>
+<tr><td>接入与控制</td><td><b>URN Registry</b></td><td>所有能力先注册再暴露。注册时声明协议、计量单位、配额维度、SLO、scope 与审计等级；网关据此生成路由、SDK 与 OpenAPI，避免九套服务各写一遍鉴权。</td><td>—（目录）</td></tr>
+<tr><td>接入与控制</td><td><b>Metering</b></td><td>每个请求产生唯一 meter 事件，带 event_id / trace_id / billing_parent；长任务预扣 → 心跳续扣 → 结束结算。账单链路完全异步，商业账本与 usage ledger 双轨且由架构测试强制不直连。</td><td>credit（版本化汇率）</td></tr>
+<tr><td>接入与控制</td><td><b>Audit</b></td><td>每租户一条只追加哈希链，链头定期外部锚定。敏感动作先落审计再执行；审计员与管理员权限互斥，审计查询本身也产生事件。覆盖认证、授权、资源变更、数据访问、Agent 行为、计费预算、管理动作七类。</td><td>—（合规）</td></tr>
+<tr><td>接入与控制</td><td><b>Vault</b></td><td>第三方凭据由 Vault 保管，主 Key 只存哈希。Scope = (org, project, env)；materialize 封存密文 → apply 按 scope × provider 激活 → revoke 终态，每步产生 receipt 并写入审计链。</td><td>—（凭据）</td></tr>
+<tr><td>服务层（供给侧依赖链）</td><td><b>IaaS</b></td><td>异构加速卡事实与配额的持有者。节点 agent 零入站外连、心跳与租约上报事实；对外提供 VM / VPC / Volume / Image / Snapshot，租户 VPC 隔离、长生命周期。</td><td>vCPU·h / GPU·h / GB·月 / 出网 GB</td></tr>
+<tr><td>服务层（供给侧依赖链）</td><td><b>MaaS</b></td><td>模型目录、制品分发、可解释放置与 OpenAI 兼容推理。platform 的 Rust 骨架由 catalog / gpu / scheduler / node-agent / distributor / state / inference 七个 crate 组成，推理层复用 kpower 的 /v1 与分布式服务。</td><td>输入/输出 token / 卡时 / 副本·秒</td></tr>
+<tr><td>服务层（供给侧依赖链）</td><td><b>TaaS</b></td><td>数据集、实验、Job、checkpoint、adapter 与评测门禁。Job 走 created → reserved → running → settled；评测与 Judge 复用同一套基准，供 adapter 上线与线上回归。生产轨迹与失败样本回流成新数据集与新 Benchmark。</td><td>训练 token / GPU·秒 / 评测次数</td></tr>
+<tr><td>服务层（供给侧依赖链）</td><td><b>PaaS</b></td><td>Git → Build → Deploy → Rollback，产物不可变、Secrets 来自 Vault。发布使用与 MaaS / TaaS / Releases 共享的「版本 + 别名 + 流量权重」原语，回滚即别名翻转。项目 / 函数级弹性 0→N。</td><td>构建分钟 / 请求数 / GB·s / 出网 GB</td></tr>
+<tr><td>服务层（供给侧依赖链）</td><td><b>AaaS</b></td><td>Agent 运行时：单 actor 沙箱、会话、工具调用、挂起唤醒与检查点。沙箱零凭据，egress 网关只注入 secret_ref + version；沙箱 fail-closed，缺失宿主能力时拒绝降级为裸执行。</td><td>actor·秒 / 唤醒次数 / 快照 GB·天</td></tr>
+<tr><td>服务层（供给侧依赖链）</td><td><b>SaaS</b></td><td>构建在下面各层之上的产品表面。统一租户 schema、无状态，对外抽象为 Entity / Tool / Skill；按有效结果计费，无结果不产生账单。</td><td>按有效结果条数；无结果不收费</td></tr>
+<tr><td>开发者供应链</td><td><b>Actions</b></td><td>事件触发的 Workflow（push / PR / schedule / 评测完成 / 训练完成 / 告警），托管 CPU 与 GPU 两种 Runner，Secrets 复用身份平面。产出构建产物给 Packages、触发 Releases，并可调用 TaaS 训练、MaaS 评测。</td><td>runner·分钟 / 并发数</td></tr>
+<tr><td>开发者供应链</td><td><b>Packages</b></td><td>OCI / ORAS 制品仓库：容器镜像、模型权重、LoRA adapter、数据集、Agent bundle、MCP server 包。版本不可变，附 Attestation 与 SBOM、签名验签，按命名空间与保留策略治理。</td><td>GB·月 / 拉取次数</td></tr>
+<tr><td>开发者供应链</td><td><b>Releases</b></td><td>Release / Channel（canary、prod）/ Environment。灰度比例、健康检查门禁、一键回滚、变更记录与审计；把 MaaS 的 adapter 版本、PaaS 部署、AaaS actor 模板统一成一次可回滚发布。</td><td>发布次数 / 灰度流量</td></tr>
+<tr><td>资源底座</td><td><b>Heterogeneous Resource Pool</b></td><td>异构算力底座：NVIDIA / AMD / Ascend / PPU / Hygon / Apple 与云厂商。GPU / NPU 设备事实与显存、CPU / RDMA 主机网络、对象存储与镜像缓存。控制面声明放置意图，资源池执行事实，不对租户直接暴露。</td><td>容量由 IaaS 计量</td></tr>
+</tbody></table>
+<h2>0x02 : 接入与控制</h2>
+<p>一把 Key 的承诺闭环：入口做准入与信任交换，五个共享模型决定配额、路由、计费、审计与凭据能否共用一条链。</p>
+<div class="diagram">
+<p class="diagram-cap">Unified Gateway · 请求数 / 限流</p>
+<svg viewBox="0 0 680 386" width="680" height="386" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>Unified Gateway · module architecture</title>
+<desc>唯一入口与策略执行点。LLM / API / MCP / A2A 统一路由、限流、失败回退与快照准入；forward-auth 回注 subject / plane / org，主 Key 只在边缘出现一次。</desc>
+<defs><marker id="arw-gateway" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#141413" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<rect x="0" y="0" width="680" height="386" rx="14" fill="#F8F6F0"/>
+<g font-family="Menlo, SFMono-Regular, Consolas, monospace">
+<rect x="150" y="20" width="380" height="46" rx="8" fill="#141413"/>
+<text x="340" y="50" font-size="16" fill="#FDFCF9" text-anchor="middle">Unified Gateway</text>
+<rect x="130" y="86" width="420" height="46" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="340" y="114" font-size="11" fill="#141413" text-anchor="middle">One API key + LLM / API / MCP / A2A request</text>
+<path d="M340 132 L340 146 M128 146 L552 146" fill="none" stroke="#141413" stroke-width="1.2"/>
+<path d="M128 146 L128 156" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-gateway)"/>
+<path d="M340 146 L340 156" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-gateway)"/>
+<path d="M552 146 L552 156" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-gateway)"/>
+<rect x="30" y="158" width="196" height="92" rx="6" fill="#141413"/>
+<text x="128" y="190" font-size="12.5" fill="#FDFCF9" text-anchor="middle">AUTH · PEP</text>
+<text x="128" y="213" font-size="10.5" fill="#FDFCF9" text-anchor="middle">forward-auth</text>
+<text x="128" y="231" font-size="10.5" fill="#FDFCF9" text-anchor="middle">scope + budget gate</text>
+<rect x="254" y="158" width="196" height="92" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="352" y="190" font-size="12.5" fill="#141413" text-anchor="middle">ROUTE</text>
+<text x="352" y="213" font-size="10.5" fill="#7A756C" text-anchor="middle">URN registry → target</text>
+<text x="352" y="231" font-size="10.5" fill="#7A756C" text-anchor="middle">failover, snapshot admit</text>
+<rect x="478" y="158" width="196" height="92" rx="6" fill="#FDFCF9" stroke="#4E60FF" stroke-width="1.2"/>
+<text x="576" y="190" font-size="12.5" fill="#141413" text-anchor="middle">METER</text>
+<text x="576" y="213" font-size="10.5" fill="#4E60FF" text-anchor="middle">local token bucket</text>
+<text x="576" y="231" font-size="10.5" fill="#4E60FF" text-anchor="middle">ledger fully async</text>
+<path d="M128 250 L128 266 M340 250 L340 266 M552 250 L552 266 M128 266 L552 266" fill="none" stroke="#141413" stroke-width="1.2"/>
+<path d="M340 266 L340 280" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-gateway)"/>
+<rect x="130" y="282" width="420" height="46" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="340" y="310" font-size="11" fill="#141413" text-anchor="middle">Short-lived scoped credential → 9 services</text>
+<rect x="30" y="340" width="620" height="30" rx="6" fill="#4E60FF"/>
+<text x="340" y="359" font-size="10.5" fill="#FDFCF9" text-anchor="middle">PRIMARY KEY APPEARS ONCE AT THE EDGE · NEVER FORWARDED</text>
+</g></svg>
+</div>
+<div class="role"><b>Unified Gateway</b> · 唯一入口与策略执行点。LLM / API / MCP / A2A 统一路由、限流、失败回退与快照准入；forward-auth 回注 subject / plane / org，主 Key 只在边缘出现一次。</div>
+<div class="diagram">
+<p class="diagram-cap">Identity · —（信任根）</p>
+<svg viewBox="0 0 680 386" width="680" height="386" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>Identity · module architecture</title>
+<desc>一把 Key 的权威单点。库内只存 HMAC / argon2id 哈希与前缀；tenant → project → env 三层 Scope 决定计费、配额与发布边界；RFC 8693 换成 5–15 分钟、单服务 aud 的短时 SVID / JWT。</desc>
+<defs><marker id="arw-identity" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#141413" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<rect x="0" y="0" width="680" height="386" rx="14" fill="#F8F6F0"/>
+<g font-family="Menlo, SFMono-Regular, Consolas, monospace">
+<rect x="150" y="20" width="380" height="46" rx="8" fill="#141413"/>
+<text x="340" y="50" font-size="16" fill="#FDFCF9" text-anchor="middle">Identity</text>
+<rect x="130" y="86" width="420" height="46" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="340" y="114" font-size="11" fill="#141413" text-anchor="middle">ak_live_{tenant}.{project}.{env}.{random}</text>
+<path d="M340 132 L340 146 M128 146 L552 146" fill="none" stroke="#141413" stroke-width="1.2"/>
+<path d="M128 146 L128 156" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-identity)"/>
+<path d="M340 146 L340 156" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-identity)"/>
+<path d="M552 146 L552 156" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-identity)"/>
+<rect x="30" y="158" width="196" height="92" rx="6" fill="#141413"/>
+<text x="128" y="190" font-size="12.5" fill="#FDFCF9" text-anchor="middle">SCOPE</text>
+<text x="128" y="213" font-size="10.5" fill="#FDFCF9" text-anchor="middle">tenant → project</text>
+<text x="128" y="231" font-size="10.5" fill="#FDFCF9" text-anchor="middle">→ env</text>
+<rect x="254" y="158" width="196" height="92" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="352" y="190" font-size="12.5" fill="#141413" text-anchor="middle">EXCHANGE</text>
+<text x="352" y="213" font-size="10.5" fill="#7A756C" text-anchor="middle">RFC 8693 → SVID / JWT</text>
+<text x="352" y="231" font-size="10.5" fill="#7A756C" text-anchor="middle">5–15 min, aud single</text>
+<rect x="478" y="158" width="196" height="92" rx="6" fill="#FDFCF9" stroke="#4E60FF" stroke-width="1.2"/>
+<text x="576" y="190" font-size="12.5" fill="#141413" text-anchor="middle">DELEGATION</text>
+<text x="576" y="213" font-size="10.5" fill="#4E60FF" text-anchor="middle">on-behalf-of</text>
+<text x="576" y="231" font-size="10.5" fill="#4E60FF" text-anchor="middle">no raw identity forward</text>
+<path d="M128 250 L128 266 M340 250 L340 266 M552 250 L552 266 M128 266 L552 266" fill="none" stroke="#141413" stroke-width="1.2"/>
+<path d="M340 266 L340 280" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-identity)"/>
+<rect x="130" y="282" width="420" height="46" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="340" y="310" font-size="11" fill="#141413" text-anchor="middle">subject / plane / org re-injected at gateway</text>
+<rect x="30" y="340" width="620" height="30" rx="6" fill="#4E60FF"/>
+<text x="340" y="359" font-size="10.5" fill="#FDFCF9" text-anchor="middle">ONLY HASH + PREFIX STORED · SINGLE KEY AUTHORITY</text>
+</g></svg>
+</div>
+<div class="role"><b>Identity</b> · 一把 Key 的权威单点。库内只存 HMAC / argon2id 哈希与前缀；tenant → project → env 三层 Scope 决定计费、配额与发布边界；RFC 8693 换成 5–15 分钟、单服务 aud 的短时 SVID / JWT。</div>
+<div class="diagram">
+<p class="diagram-cap">URN Registry · —（目录）</p>
+<svg viewBox="0 0 680 386" width="680" height="386" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>URN Registry · module architecture</title>
+<desc>所有能力先注册再暴露。注册时声明协议、计量单位、配额维度、SLO、scope 与审计等级；网关据此生成路由、SDK 与 OpenAPI，避免九套服务各写一遍鉴权。</desc>
+<defs><marker id="arw-urn" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#141413" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<rect x="0" y="0" width="680" height="386" rx="14" fill="#F8F6F0"/>
+<g font-family="Menlo, SFMono-Regular, Consolas, monospace">
+<rect x="150" y="20" width="380" height="46" rx="8" fill="#141413"/>
+<text x="340" y="50" font-size="16" fill="#FDFCF9" text-anchor="middle">URN Registry</text>
+<rect x="130" y="86" width="420" height="46" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="340" y="114" font-size="11" fill="#141413" text-anchor="middle">Capability registration, before exposure</text>
+<path d="M340 132 L340 146 M128 146 L552 146" fill="none" stroke="#141413" stroke-width="1.2"/>
+<path d="M128 146 L128 156" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-urn)"/>
+<path d="M340 146 L340 156" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-urn)"/>
+<path d="M552 146 L552 156" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-urn)"/>
+<rect x="30" y="158" width="196" height="92" rx="6" fill="#141413"/>
+<text x="128" y="190" font-size="12.5" fill="#FDFCF9" text-anchor="middle">CONTRACT</text>
+<text x="128" y="213" font-size="10.5" fill="#FDFCF9" text-anchor="middle">protocol, unit</text>
+<text x="128" y="231" font-size="10.5" fill="#FDFCF9" text-anchor="middle">quota dimension</text>
+<rect x="254" y="158" width="196" height="92" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="352" y="190" font-size="12.5" fill="#141413" text-anchor="middle">POLICY</text>
+<text x="352" y="213" font-size="10.5" fill="#7A756C" text-anchor="middle">SLO, scope</text>
+<text x="352" y="231" font-size="10.5" fill="#7A756C" text-anchor="middle">audit level</text>
+<rect x="478" y="158" width="196" height="92" rx="6" fill="#FDFCF9" stroke="#4E60FF" stroke-width="1.2"/>
+<text x="576" y="190" font-size="12.5" fill="#141413" text-anchor="middle">GENERATE</text>
+<text x="576" y="213" font-size="10.5" fill="#4E60FF" text-anchor="middle">routes, SDK</text>
+<text x="576" y="231" font-size="10.5" fill="#4E60FF" text-anchor="middle">OpenAPI snapshot</text>
+<path d="M128 250 L128 266 M340 250 L340 266 M552 250 L552 266 M128 266 L552 266" fill="none" stroke="#141413" stroke-width="1.2"/>
+<path d="M340 266 L340 280" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-urn)"/>
+<rect x="130" y="282" width="420" height="46" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="340" y="310" font-size="11" fill="#141413" text-anchor="middle">urn:plat:{service}:{resource}:* → routing</text>
+<rect x="30" y="340" width="620" height="30" rx="6" fill="#4E60FF"/>
+<text x="340" y="359" font-size="10.5" fill="#FDFCF9" text-anchor="middle">REGISTER BEFORE EXPOSE · ONE AUTH PATH FOR ALL SERVICES</text>
+</g></svg>
+</div>
+<div class="role"><b>URN Registry</b> · 所有能力先注册再暴露。注册时声明协议、计量单位、配额维度、SLO、scope 与审计等级；网关据此生成路由、SDK 与 OpenAPI，避免九套服务各写一遍鉴权。</div>
+<div class="diagram">
+<p class="diagram-cap">Metering · credit（版本化汇率）</p>
+<svg viewBox="0 0 680 386" width="680" height="386" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>Metering · module architecture</title>
+<desc>每个请求产生唯一 meter 事件，带 event_id / trace_id / billing_parent；长任务预扣 → 心跳续扣 → 结束结算。账单链路完全异步，商业账本与 usage ledger 双轨且由架构测试强制不直连。</desc>
+<defs><marker id="arw-metering" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#141413" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<rect x="0" y="0" width="680" height="386" rx="14" fill="#F8F6F0"/>
+<g font-family="Menlo, SFMono-Regular, Consolas, monospace">
+<rect x="150" y="20" width="380" height="46" rx="8" fill="#141413"/>
+<text x="340" y="50" font-size="16" fill="#FDFCF9" text-anchor="middle">Metering</text>
+<rect x="130" y="86" width="420" height="46" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="340" y="114" font-size="11" fill="#141413" text-anchor="middle">One request → one meter event</text>
+<path d="M340 132 L340 146 M128 146 L552 146" fill="none" stroke="#141413" stroke-width="1.2"/>
+<path d="M128 146 L128 156" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-metering)"/>
+<path d="M340 146 L340 156" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-metering)"/>
+<path d="M552 146 L552 156" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-metering)"/>
+<rect x="30" y="158" width="196" height="92" rx="6" fill="#141413"/>
+<text x="128" y="190" font-size="12.5" fill="#FDFCF9" text-anchor="middle">EVENT</text>
+<text x="128" y="213" font-size="10.5" fill="#FDFCF9" text-anchor="middle">event_id, trace_id</text>
+<text x="128" y="231" font-size="10.5" fill="#FDFCF9" text-anchor="middle">billing_parent</text>
+<rect x="254" y="158" width="196" height="92" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="352" y="190" font-size="12.5" fill="#141413" text-anchor="middle">CREDIT</text>
+<text x="352" y="213" font-size="10.5" fill="#7A756C" text-anchor="middle">versioned rate table</text>
+<text x="352" y="231" font-size="10.5" fill="#7A756C" text-anchor="middle">unit → credit</text>
+<rect x="478" y="158" width="196" height="92" rx="6" fill="#FDFCF9" stroke="#4E60FF" stroke-width="1.2"/>
+<text x="576" y="190" font-size="12.5" fill="#141413" text-anchor="middle">RESERVE</text>
+<text x="576" y="213" font-size="10.5" fill="#4E60FF" text-anchor="middle">pre-hold → heartbeat</text>
+<text x="576" y="231" font-size="10.5" fill="#4E60FF" text-anchor="middle">→ settle</text>
+<path d="M128 250 L128 266 M340 250 L340 266 M552 250 L552 266 M128 266 L552 266" fill="none" stroke="#141413" stroke-width="1.2"/>
+<path d="M340 266 L340 280" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-metering)"/>
+<rect x="130" y="282" width="420" height="46" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="340" y="310" font-size="11" fill="#141413" text-anchor="middle">Per-tenant bill + async usage ledger</text>
+<rect x="30" y="340" width="620" height="30" rx="6" fill="#4E60FF"/>
+<text x="340" y="359" font-size="10.5" fill="#FDFCF9" text-anchor="middle">BILLING LEDGER AND USAGE LEDGER NEVER JOIN DIRECTLY</text>
+</g></svg>
+</div>
+<div class="role"><b>Metering</b> · 每个请求产生唯一 meter 事件，带 event_id / trace_id / billing_parent；长任务预扣 → 心跳续扣 → 结束结算。账单链路完全异步，商业账本与 usage ledger 双轨且由架构测试强制不直连。</div>
+<div class="diagram">
+<p class="diagram-cap">Audit · —（合规）</p>
+<svg viewBox="0 0 680 386" width="680" height="386" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>Audit · module architecture</title>
+<desc>每租户一条只追加哈希链，链头定期外部锚定。敏感动作先落审计再执行；审计员与管理员权限互斥，审计查询本身也产生事件。覆盖认证、授权、资源变更、数据访问、Agent 行为、计费预算、管理动作七类。</desc>
+<defs><marker id="arw-audit" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#141413" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<rect x="0" y="0" width="680" height="386" rx="14" fill="#F8F6F0"/>
+<g font-family="Menlo, SFMono-Regular, Consolas, monospace">
+<rect x="150" y="20" width="380" height="46" rx="8" fill="#141413"/>
+<text x="340" y="50" font-size="16" fill="#FDFCF9" text-anchor="middle">Audit</text>
+<rect x="130" y="86" width="420" height="46" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="340" y="114" font-size="11" fill="#141413" text-anchor="middle">Seven event classes, auth → admin action</text>
+<path d="M340 132 L340 146 M128 146 L552 146" fill="none" stroke="#141413" stroke-width="1.2"/>
+<path d="M128 146 L128 156" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-audit)"/>
+<path d="M340 146 L340 156" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-audit)"/>
+<path d="M552 146 L552 156" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-audit)"/>
+<rect x="30" y="158" width="196" height="92" rx="6" fill="#141413"/>
+<text x="128" y="190" font-size="12.5" fill="#FDFCF9" text-anchor="middle">APPEND-ONLY</text>
+<text x="128" y="213" font-size="10.5" fill="#FDFCF9" text-anchor="middle">per-tenant hash chain</text>
+<text x="128" y="231" font-size="10.5" fill="#FDFCF9" text-anchor="middle">prev_hash / hash</text>
+<rect x="254" y="158" width="196" height="92" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="352" y="190" font-size="12.5" fill="#141413" text-anchor="middle">ANCHOR</text>
+<text x="352" y="213" font-size="10.5" fill="#7A756C" text-anchor="middle">chain head</text>
+<text x="352" y="231" font-size="10.5" fill="#7A756C" text-anchor="middle">external anchoring</text>
+<rect x="478" y="158" width="196" height="92" rx="6" fill="#FDFCF9" stroke="#4E60FF" stroke-width="1.2"/>
+<text x="576" y="190" font-size="12.5" fill="#141413" text-anchor="middle">GATE</text>
+<text x="576" y="213" font-size="10.5" fill="#4E60FF" text-anchor="middle">sensitive action</text>
+<text x="576" y="231" font-size="10.5" fill="#4E60FF" text-anchor="middle">log before execute</text>
+<path d="M128 250 L128 266 M340 250 L340 266 M552 250 L552 266 M128 266 L552 266" fill="none" stroke="#141413" stroke-width="1.2"/>
+<path d="M340 266 L340 280" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-audit)"/>
+<rect x="130" y="282" width="420" height="46" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="340" y="310" font-size="11" fill="#141413" text-anchor="middle">Auditor-only query · query emits event</text>
+<rect x="30" y="340" width="620" height="30" rx="6" fill="#4E60FF"/>
+<text x="340" y="359" font-size="10.5" fill="#FDFCF9" text-anchor="middle">AUDITOR ROLE IS MUTUALLY EXCLUSIVE WITH ADMIN</text>
+</g></svg>
+</div>
+<div class="role"><b>Audit</b> · 每租户一条只追加哈希链，链头定期外部锚定。敏感动作先落审计再执行；审计员与管理员权限互斥，审计查询本身也产生事件。覆盖认证、授权、资源变更、数据访问、Agent 行为、计费预算、管理动作七类。</div>
+<div class="diagram">
+<p class="diagram-cap">Vault · —（凭据）</p>
+<svg viewBox="0 0 680 386" width="680" height="386" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>Vault · module architecture</title>
+<desc>第三方凭据由 Vault 保管，主 Key 只存哈希。Scope = (org, project, env)；materialize 封存密文 → apply 按 scope × provider 激活 → revoke 终态，每步产生 receipt 并写入审计链。</desc>
+<defs><marker id="arw-vault" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#141413" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<rect x="0" y="0" width="680" height="386" rx="14" fill="#F8F6F0"/>
+<g font-family="Menlo, SFMono-Regular, Consolas, monospace">
+<rect x="150" y="20" width="380" height="46" rx="8" fill="#141413"/>
+<text x="340" y="50" font-size="16" fill="#FDFCF9" text-anchor="middle">Vault</text>
+<rect x="130" y="86" width="420" height="46" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="340" y="114" font-size="11" fill="#141413" text-anchor="middle">Third-party credential, never the primary key</text>
+<path d="M340 132 L340 146 M128 146 L552 146" fill="none" stroke="#141413" stroke-width="1.2"/>
+<path d="M128 146 L128 156" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-vault)"/>
+<path d="M340 146 L340 156" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-vault)"/>
+<path d="M552 146 L552 156" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-vault)"/>
+<rect x="30" y="158" width="196" height="92" rx="6" fill="#141413"/>
+<text x="128" y="190" font-size="12.5" fill="#FDFCF9" text-anchor="middle">SEAL</text>
+<text x="128" y="213" font-size="10.5" fill="#FDFCF9" text-anchor="middle">ciphertext, key_id</text>
+<text x="128" y="231" font-size="10.5" fill="#FDFCF9" text-anchor="middle">version, expires_at</text>
+<rect x="254" y="158" width="196" height="92" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="352" y="190" font-size="12.5" fill="#141413" text-anchor="middle">ACTIVATE</text>
+<text x="352" y="213" font-size="10.5" fill="#7A756C" text-anchor="middle">scope × provider</text>
+<text x="352" y="231" font-size="10.5" fill="#7A756C" text-anchor="middle">apply → receipt</text>
+<rect x="478" y="158" width="196" height="92" rx="6" fill="#FDFCF9" stroke="#4E60FF" stroke-width="1.2"/>
+<text x="576" y="190" font-size="12.5" fill="#141413" text-anchor="middle">REVOKE</text>
+<text x="576" y="213" font-size="10.5" fill="#4E60FF" text-anchor="middle">terminal state</text>
+<text x="576" y="231" font-size="10.5" fill="#4E60FF" text-anchor="middle">receipt → audit</text>
+<path d="M128 250 L128 266 M340 250 L340 266 M552 250 L552 266 M128 266 L552 266" fill="none" stroke="#141413" stroke-width="1.2"/>
+<path d="M340 266 L340 280" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-vault)"/>
+<rect x="130" y="282" width="420" height="46" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="340" y="310" font-size="11" fill="#141413" text-anchor="middle">secret_ref + version injected at egress</text>
+<rect x="30" y="340" width="620" height="30" rx="6" fill="#4E60FF"/>
+<text x="340" y="359" font-size="10.5" fill="#FDFCF9" text-anchor="middle">PLAINTEXT NEVER ENTERS SANDBOX, LOGS, WIRE OR AUDIT</text>
+</g></svg>
+</div>
+<div class="role"><b>Vault</b> · 第三方凭据由 Vault 保管，主 Key 只存哈希。Scope = (org, project, env)；materialize 封存密文 → apply 按 scope × provider 激活 → revoke 终态，每步产生 receipt 并写入审计链。</div>
+<h2>0x03 : 服务层（供给侧依赖链）</h2>
+<p>IaaS → MaaS → TaaS → PaaS / AaaS → SaaS。下层向上层提供能力，上层向下层回报生产数据。</p>
+<div class="diagram">
+<p class="diagram-cap">IaaS · vCPU·h / GPU·h / GB·月 / 出网 GB</p>
+<svg viewBox="0 0 680 386" width="680" height="386" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>IaaS · module architecture</title>
+<desc>异构加速卡事实与配额的持有者。节点 agent 零入站外连、心跳与租约上报事实；对外提供 VM / VPC / Volume / Image / Snapshot，租户 VPC 隔离、长生命周期。</desc>
+<defs><marker id="arw-iaas" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#141413" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<rect x="0" y="0" width="680" height="386" rx="14" fill="#F8F6F0"/>
+<g font-family="Menlo, SFMono-Regular, Consolas, monospace">
+<rect x="150" y="20" width="380" height="46" rx="8" fill="#141413"/>
+<text x="340" y="50" font-size="16" fill="#FDFCF9" text-anchor="middle">IaaS</text>
+<rect x="130" y="86" width="420" height="46" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="340" y="114" font-size="11" fill="#141413" text-anchor="middle">Accelerator inventory + node heartbeats</text>
+<path d="M340 132 L340 146 M128 146 L552 146" fill="none" stroke="#141413" stroke-width="1.2"/>
+<path d="M128 146 L128 156" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-iaas)"/>
+<path d="M340 146 L340 156" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-iaas)"/>
+<path d="M552 146 L552 156" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-iaas)"/>
+<rect x="30" y="158" width="196" height="92" rx="6" fill="#141413"/>
+<text x="128" y="190" font-size="12.5" fill="#FDFCF9" text-anchor="middle">FACTS</text>
+<text x="128" y="213" font-size="10.5" fill="#FDFCF9" text-anchor="middle">vendor, arch</text>
+<text x="128" y="231" font-size="10.5" fill="#FDFCF9" text-anchor="middle">memory, free</text>
+<rect x="254" y="158" width="196" height="92" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="352" y="190" font-size="12.5" fill="#141413" text-anchor="middle">QUOTA</text>
+<text x="352" y="213" font-size="10.5" fill="#7A756C" text-anchor="middle">vCPU·h, GPU·h</text>
+<text x="352" y="231" font-size="10.5" fill="#7A756C" text-anchor="middle">GB·month, egress</text>
+<rect x="478" y="158" width="196" height="92" rx="6" fill="#FDFCF9" stroke="#4E60FF" stroke-width="1.2"/>
+<text x="576" y="190" font-size="12.5" fill="#141413" text-anchor="middle">LEASE</text>
+<text x="576" y="213" font-size="10.5" fill="#4E60FF" text-anchor="middle">node agent</text>
+<text x="576" y="231" font-size="10.5" fill="#4E60FF" text-anchor="middle">heartbeat + TTL</text>
+<path d="M128 250 L128 266 M340 250 L340 266 M552 250 L552 266 M128 266 L552 266" fill="none" stroke="#141413" stroke-width="1.2"/>
+<path d="M340 266 L340 280" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-iaas)"/>
+<rect x="130" y="282" width="420" height="46" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="340" y="310" font-size="11" fill="#141413" text-anchor="middle">VM / VPC / Volume / Image / Snapshot</text>
+<rect x="30" y="340" width="620" height="30" rx="6" fill="#4E60FF"/>
+<text x="340" y="359" font-size="10.5" fill="#FDFCF9" text-anchor="middle">TENANT VPC · LONG-LIVED · MINUTES TO MONTHS</text>
+</g></svg>
+</div>
+<div class="role"><b>IaaS</b> · 异构加速卡事实与配额的持有者。节点 agent 零入站外连、心跳与租约上报事实；对外提供 VM / VPC / Volume / Image / Snapshot，租户 VPC 隔离、长生命周期。</div>
+<div class="diagram">
+<p class="diagram-cap">MaaS · 输入/输出 token / 卡时 / 副本·秒</p>
+<svg viewBox="0 0 680 386" width="680" height="386" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>MaaS · module architecture</title>
+<desc>模型目录、制品分发、可解释放置与 OpenAI 兼容推理。platform 的 Rust 骨架由 catalog / gpu / scheduler / node-agent / distributor / state / inference 七个 crate 组成，推理层复用 kpower 的 /v1 与分布式服务。</desc>
+<defs><marker id="arw-maas" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#141413" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<rect x="0" y="0" width="680" height="386" rx="14" fill="#F8F6F0"/>
+<g font-family="Menlo, SFMono-Regular, Consolas, monospace">
+<rect x="150" y="20" width="380" height="46" rx="8" fill="#141413"/>
+<text x="340" y="50" font-size="16" fill="#FDFCF9" text-anchor="middle">MaaS</text>
+<rect x="130" y="86" width="420" height="46" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="340" y="114" font-size="11" fill="#141413" text-anchor="middle">ModelSpec + weights + image + launch args</text>
+<path d="M340 132 L340 146 M128 146 L552 146" fill="none" stroke="#141413" stroke-width="1.2"/>
+<path d="M128 146 L128 156" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-maas)"/>
+<path d="M340 146 L340 156" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-maas)"/>
+<path d="M552 146 L552 156" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-maas)"/>
+<rect x="30" y="158" width="196" height="92" rx="6" fill="#141413"/>
+<text x="128" y="190" font-size="12.5" fill="#FDFCF9" text-anchor="middle">CATALOG</text>
+<text x="128" y="213" font-size="10.5" fill="#FDFCF9" text-anchor="middle">models / launch specs</text>
+<text x="128" y="231" font-size="10.5" fill="#FDFCF9" text-anchor="middle">accelerator, revision</text>
+<rect x="254" y="158" width="196" height="92" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="352" y="190" font-size="12.5" fill="#141413" text-anchor="middle">PLACE</text>
+<text x="352" y="213" font-size="10.5" fill="#7A756C" text-anchor="middle">filter → score</text>
+<text x="352" y="231" font-size="10.5" fill="#7A756C" text-anchor="middle">RejectReason</text>
+<rect x="478" y="158" width="196" height="92" rx="6" fill="#FDFCF9" stroke="#4E60FF" stroke-width="1.2"/>
+<text x="576" y="190" font-size="12.5" fill="#141413" text-anchor="middle">SERVE</text>
+<text x="576" y="213" font-size="10.5" fill="#4E60FF" text-anchor="middle">/v1, SSE, PD split</text>
+<text x="576" y="231" font-size="10.5" fill="#4E60FF" text-anchor="middle">replica + route</text>
+<path d="M128 250 L128 266 M340 250 L340 266 M552 250 L552 266 M128 266 L552 266" fill="none" stroke="#141413" stroke-width="1.2"/>
+<path d="M340 266 L340 280" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-maas)"/>
+<rect x="130" y="282" width="420" height="46" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="340" y="310" font-size="11" fill="#141413" text-anchor="middle">Deployment / Replica / Token</text>
+<rect x="30" y="340" width="620" height="30" rx="6" fill="#4E60FF"/>
+<text x="340" y="359" font-size="10.5" fill="#FDFCF9" text-anchor="middle">RUST 7 CRATES: catalog · gpu · scheduler · node-agent · distributor · state · inference</text>
+</g></svg>
+</div>
+<div class="role"><b>MaaS</b> · 模型目录、制品分发、可解释放置与 OpenAI 兼容推理。platform 的 Rust 骨架由 catalog / gpu / scheduler / node-agent / distributor / state / inference 七个 crate 组成，推理层复用 kpower 的 /v1 与分布式服务。</div>
+<div class="diagram">
+<p class="diagram-cap">TaaS · 训练 token / GPU·秒 / 评测次数</p>
+<svg viewBox="0 0 680 386" width="680" height="386" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>TaaS · module architecture</title>
+<desc>数据集、实验、Job、checkpoint、adapter 与评测门禁。Job 走 created → reserved → running → settled；评测与 Judge 复用同一套基准，供 adapter 上线与线上回归。生产轨迹与失败样本回流成新数据集与新 Benchmark。</desc>
+<defs><marker id="arw-taas" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#141413" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<rect x="0" y="0" width="680" height="386" rx="14" fill="#F8F6F0"/>
+<g font-family="Menlo, SFMono-Regular, Consolas, monospace">
+<rect x="150" y="20" width="380" height="46" rx="8" fill="#141413"/>
+<text x="340" y="50" font-size="16" fill="#FDFCF9" text-anchor="middle">TaaS</text>
+<rect x="130" y="86" width="420" height="46" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="340" y="114" font-size="11" fill="#141413" text-anchor="middle">Dataset + base model + production traces</text>
+<path d="M340 132 L340 146 M128 146 L552 146" fill="none" stroke="#141413" stroke-width="1.2"/>
+<path d="M128 146 L128 156" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-taas)"/>
+<path d="M340 146 L340 156" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-taas)"/>
+<path d="M552 146 L552 156" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-taas)"/>
+<rect x="30" y="158" width="196" height="92" rx="6" fill="#141413"/>
+<text x="128" y="190" font-size="12.5" fill="#FDFCF9" text-anchor="middle">JOB</text>
+<text x="128" y="213" font-size="10.5" fill="#FDFCF9" text-anchor="middle">created → reserved</text>
+<text x="128" y="231" font-size="10.5" fill="#FDFCF9" text-anchor="middle">→ running → settled</text>
+<rect x="254" y="158" width="196" height="92" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="352" y="190" font-size="12.5" fill="#141413" text-anchor="middle">ADAPTER</text>
+<text x="352" y="213" font-size="10.5" fill="#7A756C" text-anchor="middle">versioned</text>
+<text x="352" y="231" font-size="10.5" fill="#7A756C" text-anchor="middle">eval-gated release</text>
+<rect x="478" y="158" width="196" height="92" rx="6" fill="#FDFCF9" stroke="#4E60FF" stroke-width="1.2"/>
+<text x="576" y="190" font-size="12.5" fill="#141413" text-anchor="middle">EVAL</text>
+<text x="576" y="213" font-size="10.5" fill="#4E60FF" text-anchor="middle">shared Benchmark</text>
+<text x="576" y="231" font-size="10.5" fill="#4E60FF" text-anchor="middle">/ Judge</text>
+<path d="M128 250 L128 266 M340 250 L340 266 M552 250 L552 266 M128 266 L552 266" fill="none" stroke="#141413" stroke-width="1.2"/>
+<path d="M340 266 L340 280" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-taas)"/>
+<rect x="130" y="282" width="420" height="46" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="340" y="310" font-size="11" fill="#141413" text-anchor="middle">Checkpoint / Adapter → MaaS + Releases</text>
+<rect x="30" y="340" width="620" height="30" rx="6" fill="#4E60FF"/>
+<text x="340" y="359" font-size="10.5" fill="#FDFCF9" text-anchor="middle">PRODUCTION TRACES FLOW BACK AS NEW DATASET + BENCHMARK</text>
+</g></svg>
+</div>
+<div class="role"><b>TaaS</b> · 数据集、实验、Job、checkpoint、adapter 与评测门禁。Job 走 created → reserved → running → settled；评测与 Judge 复用同一套基准，供 adapter 上线与线上回归。生产轨迹与失败样本回流成新数据集与新 Benchmark。</div>
+<div class="diagram">
+<p class="diagram-cap">PaaS · 构建分钟 / 请求数 / GB·s / 出网 GB</p>
+<svg viewBox="0 0 680 386" width="680" height="386" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>PaaS · module architecture</title>
+<desc>Git → Build → Deploy → Rollback，产物不可变、Secrets 来自 Vault。发布使用与 MaaS / TaaS / Releases 共享的「版本 + 别名 + 流量权重」原语，回滚即别名翻转。项目 / 函数级弹性 0→N。</desc>
+<defs><marker id="arw-paas" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#141413" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<rect x="0" y="0" width="680" height="386" rx="14" fill="#F8F6F0"/>
+<g font-family="Menlo, SFMono-Regular, Consolas, monospace">
+<rect x="150" y="20" width="380" height="46" rx="8" fill="#141413"/>
+<text x="340" y="50" font-size="16" fill="#FDFCF9" text-anchor="middle">PaaS</text>
+<rect x="130" y="86" width="420" height="46" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="340" y="114" font-size="11" fill="#141413" text-anchor="middle">Git push + preview request</text>
+<path d="M340 132 L340 146 M128 146 L552 146" fill="none" stroke="#141413" stroke-width="1.2"/>
+<path d="M128 146 L128 156" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-paas)"/>
+<path d="M340 146 L340 156" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-paas)"/>
+<path d="M552 146 L552 156" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-paas)"/>
+<rect x="30" y="158" width="196" height="92" rx="6" fill="#141413"/>
+<text x="128" y="190" font-size="12.5" fill="#FDFCF9" text-anchor="middle">BUILD</text>
+<text x="128" y="213" font-size="10.5" fill="#FDFCF9" text-anchor="middle">immutable artifact</text>
+<text x="128" y="231" font-size="10.5" fill="#FDFCF9" text-anchor="middle">signature + SBOM</text>
+<rect x="254" y="158" width="196" height="92" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="352" y="190" font-size="12.5" fill="#141413" text-anchor="middle">DEPLOY</text>
+<text x="352" y="213" font-size="10.5" fill="#7A756C" text-anchor="middle">alias + traffic</text>
+<text x="352" y="231" font-size="10.5" fill="#7A756C" text-anchor="middle">weight</text>
+<rect x="478" y="158" width="196" height="92" rx="6" fill="#FDFCF9" stroke="#4E60FF" stroke-width="1.2"/>
+<text x="576" y="190" font-size="12.5" fill="#141413" text-anchor="middle">ROLLBACK</text>
+<text x="576" y="213" font-size="10.5" fill="#4E60FF" text-anchor="middle">one primitive</text>
+<text x="576" y="231" font-size="10.5" fill="#4E60FF" text-anchor="middle">instant alias flip</text>
+<path d="M128 250 L128 266 M340 250 L340 266 M552 250 L552 266 M128 266 L552 266" fill="none" stroke="#141413" stroke-width="1.2"/>
+<path d="M340 266 L340 280" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-paas)"/>
+<rect x="130" y="282" width="420" height="46" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="340" y="310" font-size="11" fill="#141413" text-anchor="middle">Project / Build / Preview / Deployment</text>
+<rect x="30" y="340" width="620" height="30" rx="6" fill="#4E60FF"/>
+<text x="340" y="359" font-size="10.5" fill="#FDFCF9" text-anchor="middle">ELASTIC 0→N · SECRETS FROM VAULT</text>
+</g></svg>
+</div>
+<div class="role"><b>PaaS</b> · Git → Build → Deploy → Rollback，产物不可变、Secrets 来自 Vault。发布使用与 MaaS / TaaS / Releases 共享的「版本 + 别名 + 流量权重」原语，回滚即别名翻转。项目 / 函数级弹性 0→N。</div>
+<div class="diagram">
+<p class="diagram-cap">AaaS · actor·秒 / 唤醒次数 / 快照 GB·天</p>
+<svg viewBox="0 0 680 386" width="680" height="386" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>AaaS · module architecture</title>
+<desc>Agent 运行时：单 actor 沙箱、会话、工具调用、挂起唤醒与检查点。沙箱零凭据，egress 网关只注入 secret_ref + version；沙箱 fail-closed，缺失宿主能力时拒绝降级为裸执行。</desc>
+<defs><marker id="arw-aaas" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#141413" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<rect x="0" y="0" width="680" height="386" rx="14" fill="#F8F6F0"/>
+<g font-family="Menlo, SFMono-Regular, Consolas, monospace">
+<rect x="150" y="20" width="380" height="46" rx="8" fill="#141413"/>
+<text x="340" y="50" font-size="16" fill="#FDFCF9" text-anchor="middle">AaaS</text>
+<rect x="130" y="86" width="420" height="46" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="340" y="114" font-size="11" fill="#141413" text-anchor="middle">Actor / Session / Tool call</text>
+<path d="M340 132 L340 146 M128 146 L552 146" fill="none" stroke="#141413" stroke-width="1.2"/>
+<path d="M128 146 L128 156" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-aaas)"/>
+<path d="M340 146 L340 156" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-aaas)"/>
+<path d="M552 146 L552 156" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-aaas)"/>
+<rect x="30" y="158" width="196" height="92" rx="6" fill="#141413"/>
+<text x="128" y="190" font-size="12.5" fill="#FDFCF9" text-anchor="middle">SANDBOX</text>
+<text x="128" y="213" font-size="10.5" fill="#FDFCF9" text-anchor="middle">zero credential</text>
+<text x="128" y="231" font-size="10.5" fill="#FDFCF9" text-anchor="middle">fail-closed</text>
+<rect x="254" y="158" width="196" height="92" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="352" y="190" font-size="12.5" fill="#141413" text-anchor="middle">SNAPSHOT</text>
+<text x="352" y="213" font-size="10.5" fill="#7A756C" text-anchor="middle">suspend / resume</text>
+<text x="352" y="231" font-size="10.5" fill="#7A756C" text-anchor="middle">checkpoint</text>
+<rect x="478" y="158" width="196" height="92" rx="6" fill="#FDFCF9" stroke="#4E60FF" stroke-width="1.2"/>
+<text x="576" y="190" font-size="12.5" fill="#141413" text-anchor="middle">EGRESS</text>
+<text x="576" y="213" font-size="10.5" fill="#4E60FF" text-anchor="middle">secret_ref + version</text>
+<text x="576" y="231" font-size="10.5" fill="#4E60FF" text-anchor="middle">injection only</text>
+<path d="M128 250 L128 266 M340 250 L340 266 M552 250 L552 266 M128 266 L552 266" fill="none" stroke="#141413" stroke-width="1.2"/>
+<path d="M340 266 L340 280" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-aaas)"/>
+<rect x="130" y="282" width="420" height="46" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="340" y="310" font-size="11" fill="#141413" text-anchor="middle">Actor result → SaaS / tool</text>
+<rect x="30" y="340" width="620" height="30" rx="6" fill="#4E60FF"/>
+<text x="340" y="359" font-size="10.5" fill="#FDFCF9" text-anchor="middle">SANDBOX HOLDS NO CREDENTIAL · ACTOR·SEC + WAKEUPS</text>
+</g></svg>
+</div>
+<div class="role"><b>AaaS</b> · Agent 运行时：单 actor 沙箱、会话、工具调用、挂起唤醒与检查点。沙箱零凭据，egress 网关只注入 secret_ref + version；沙箱 fail-closed，缺失宿主能力时拒绝降级为裸执行。</div>
+<div class="diagram">
+<p class="diagram-cap">SaaS · 按有效结果条数；无结果不收费</p>
+<svg viewBox="0 0 680 386" width="680" height="386" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>SaaS · module architecture</title>
+<desc>构建在下面各层之上的产品表面。统一租户 schema、无状态，对外抽象为 Entity / Tool / Skill；按有效结果计费，无结果不产生账单。</desc>
+<defs><marker id="arw-saas" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#141413" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<rect x="0" y="0" width="680" height="386" rx="14" fill="#F8F6F0"/>
+<g font-family="Menlo, SFMono-Regular, Consolas, monospace">
+<rect x="150" y="20" width="380" height="46" rx="8" fill="#141413"/>
+<text x="340" y="50" font-size="16" fill="#FDFCF9" text-anchor="middle">SaaS</text>
+<rect x="130" y="86" width="420" height="46" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="340" y="114" font-size="11" fill="#141413" text-anchor="middle">Entity / Tool / Skill request</text>
+<path d="M340 132 L340 146 M128 146 L552 146" fill="none" stroke="#141413" stroke-width="1.2"/>
+<path d="M128 146 L128 156" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-saas)"/>
+<path d="M340 146 L340 156" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-saas)"/>
+<path d="M552 146 L552 156" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-saas)"/>
+<rect x="30" y="158" width="196" height="92" rx="6" fill="#141413"/>
+<text x="128" y="190" font-size="12.5" fill="#FDFCF9" text-anchor="middle">SCHEMA</text>
+<text x="128" y="213" font-size="10.5" fill="#FDFCF9" text-anchor="middle">unified tenant</text>
+<text x="128" y="231" font-size="10.5" fill="#FDFCF9" text-anchor="middle">schema</text>
+<rect x="254" y="158" width="196" height="92" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="352" y="190" font-size="12.5" fill="#141413" text-anchor="middle">RESULT</text>
+<text x="352" y="213" font-size="10.5" fill="#7A756C" text-anchor="middle">outcome-gated</text>
+<text x="352" y="231" font-size="10.5" fill="#7A756C" text-anchor="middle">billing</text>
+<rect x="478" y="158" width="196" height="92" rx="6" fill="#FDFCF9" stroke="#4E60FF" stroke-width="1.2"/>
+<text x="576" y="190" font-size="12.5" fill="#141413" text-anchor="middle">STATELESS</text>
+<text x="576" y="213" font-size="10.5" fill="#4E60FF" text-anchor="middle">no result</text>
+<text x="576" y="231" font-size="10.5" fill="#4E60FF" text-anchor="middle">no charge</text>
+<path d="M128 250 L128 266 M340 250 L340 266 M552 250 L552 266 M128 266 L552 266" fill="none" stroke="#141413" stroke-width="1.2"/>
+<path d="M340 266 L340 280" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-saas)"/>
+<rect x="130" y="282" width="420" height="46" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="340" y="310" font-size="11" fill="#141413" text-anchor="middle">Product surfaces over all layers</text>
+<rect x="30" y="340" width="620" height="30" rx="6" fill="#4E60FF"/>
+<text x="340" y="359" font-size="10.5" fill="#FDFCF9" text-anchor="middle">BILL PER VALID RESULT · NO RESULT → NO CHARGE</text>
+</g></svg>
+</div>
+<div class="role"><b>SaaS</b> · 构建在下面各层之上的产品表面。统一租户 schema、无状态，对外抽象为 Entity / Tool / Skill；按有效结果计费，无结果不产生账单。</div>
+<h2>0x04 : 开发者供应链</h2>
+<p>Actions 产出制品 → Packages 固化不可变版本 → Releases 用别名与流量权重灰度，把变更送进服务链并形成训练回流闭环。</p>
+<div class="diagram">
+<p class="diagram-cap">Actions · runner·分钟 / 并发数</p>
+<svg viewBox="0 0 680 386" width="680" height="386" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>Actions · module architecture</title>
+<desc>事件触发的 Workflow（push / PR / schedule / 评测完成 / 训练完成 / 告警），托管 CPU 与 GPU 两种 Runner，Secrets 复用身份平面。产出构建产物给 Packages、触发 Releases，并可调用 TaaS 训练、MaaS 评测。</desc>
+<defs><marker id="arw-actions" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#141413" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<rect x="0" y="0" width="680" height="386" rx="14" fill="#F8F6F0"/>
+<g font-family="Menlo, SFMono-Regular, Consolas, monospace">
+<rect x="150" y="20" width="380" height="46" rx="8" fill="#141413"/>
+<text x="340" y="50" font-size="16" fill="#FDFCF9" text-anchor="middle">Actions</text>
+<rect x="130" y="86" width="420" height="46" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="340" y="114" font-size="11" fill="#141413" text-anchor="middle">push / PR / schedule / eval done / alert</text>
+<path d="M340 132 L340 146 M128 146 L552 146" fill="none" stroke="#141413" stroke-width="1.2"/>
+<path d="M128 146 L128 156" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-actions)"/>
+<path d="M340 146 L340 156" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-actions)"/>
+<path d="M552 146 L552 156" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-actions)"/>
+<rect x="30" y="158" width="196" height="92" rx="6" fill="#141413"/>
+<text x="128" y="190" font-size="12.5" fill="#FDFCF9" text-anchor="middle">WORKFLOW</text>
+<text x="128" y="213" font-size="10.5" fill="#FDFCF9" text-anchor="middle">event-triggered</text>
+<text x="128" y="231" font-size="10.5" fill="#FDFCF9" text-anchor="middle">concurrency + timeout</text>
+<rect x="254" y="158" width="196" height="92" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="352" y="190" font-size="12.5" fill="#141413" text-anchor="middle">RUNNER</text>
+<text x="352" y="213" font-size="10.5" fill="#7A756C" text-anchor="middle">CPU + GPU</text>
+<text x="352" y="231" font-size="10.5" fill="#7A756C" text-anchor="middle">bounded timeout</text>
+<rect x="478" y="158" width="196" height="92" rx="6" fill="#FDFCF9" stroke="#4E60FF" stroke-width="1.2"/>
+<text x="576" y="190" font-size="12.5" fill="#141413" text-anchor="middle">SECRETS</text>
+<text x="576" y="213" font-size="10.5" fill="#4E60FF" text-anchor="middle">reuse identity</text>
+<text x="576" y="231" font-size="10.5" fill="#4E60FF" text-anchor="middle">plane</text>
+<path d="M128 250 L128 266 M340 250 L340 266 M552 250 L552 266 M128 266 L552 266" fill="none" stroke="#141413" stroke-width="1.2"/>
+<path d="M340 266 L340 280" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-actions)"/>
+<rect x="130" y="282" width="420" height="46" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="340" y="310" font-size="11" fill="#141413" text-anchor="middle">Build artifact → Packages · trigger Releases</text>
+<rect x="30" y="340" width="620" height="30" rx="6" fill="#4E60FF"/>
+<text x="340" y="359" font-size="10.5" fill="#FDFCF9" text-anchor="middle">CALLS TAAS FOR TRAINING · MAAS FOR EVALUATION</text>
+</g></svg>
+</div>
+<div class="role"><b>Actions</b> · 事件触发的 Workflow（push / PR / schedule / 评测完成 / 训练完成 / 告警），托管 CPU 与 GPU 两种 Runner，Secrets 复用身份平面。产出构建产物给 Packages、触发 Releases，并可调用 TaaS 训练、MaaS 评测。</div>
+<div class="diagram">
+<p class="diagram-cap">Packages · GB·月 / 拉取次数</p>
+<svg viewBox="0 0 680 386" width="680" height="386" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>Packages · module architecture</title>
+<desc>OCI / ORAS 制品仓库：容器镜像、模型权重、LoRA adapter、数据集、Agent bundle、MCP server 包。版本不可变，附 Attestation 与 SBOM、签名验签，按命名空间与保留策略治理。</desc>
+<defs><marker id="arw-packages" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#141413" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<rect x="0" y="0" width="680" height="386" rx="14" fill="#F8F6F0"/>
+<g font-family="Menlo, SFMono-Regular, Consolas, monospace">
+<rect x="150" y="20" width="380" height="46" rx="8" fill="#141413"/>
+<text x="340" y="50" font-size="16" fill="#FDFCF9" text-anchor="middle">Packages</text>
+<rect x="130" y="86" width="420" height="46" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="340" y="114" font-size="11" fill="#141413" text-anchor="middle">Build output · weights · adapter · dataset</text>
+<path d="M340 132 L340 146 M128 146 L552 146" fill="none" stroke="#141413" stroke-width="1.2"/>
+<path d="M128 146 L128 156" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-packages)"/>
+<path d="M340 146 L340 156" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-packages)"/>
+<path d="M552 146 L552 156" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-packages)"/>
+<rect x="30" y="158" width="196" height="92" rx="6" fill="#141413"/>
+<text x="128" y="190" font-size="12.5" fill="#FDFCF9" text-anchor="middle">IMMUTABLE</text>
+<text x="128" y="213" font-size="10.5" fill="#FDFCF9" text-anchor="middle">OCI / ORAS digest</text>
+<text x="128" y="231" font-size="10.5" fill="#FDFCF9" text-anchor="middle">version never mutates</text>
+<rect x="254" y="158" width="196" height="92" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="352" y="190" font-size="12.5" fill="#141413" text-anchor="middle">ATTEST</text>
+<text x="352" y="213" font-size="10.5" fill="#7A756C" text-anchor="middle">SBOM + signature</text>
+<text x="352" y="231" font-size="10.5" fill="#7A756C" text-anchor="middle">verify on pull</text>
+<rect x="478" y="158" width="196" height="92" rx="6" fill="#FDFCF9" stroke="#4E60FF" stroke-width="1.2"/>
+<text x="576" y="190" font-size="12.5" fill="#141413" text-anchor="middle">RETAIN</text>
+<text x="576" y="213" font-size="10.5" fill="#4E60FF" text-anchor="middle">namespace</text>
+<text x="576" y="231" font-size="10.5" fill="#4E60FF" text-anchor="middle">+ retention policy</text>
+<path d="M128 250 L128 266 M340 250 L340 266 M552 250 L552 266 M128 266 L552 266" fill="none" stroke="#141413" stroke-width="1.2"/>
+<path d="M340 266 L340 280" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-packages)"/>
+<rect x="130" y="282" width="420" height="46" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="340" y="310" font-size="11" fill="#141413" text-anchor="middle">Artifact / Version → MaaS, TaaS, AaaS, Releases</text>
+<rect x="30" y="340" width="620" height="30" rx="6" fill="#4E60FF"/>
+<text x="340" y="359" font-size="10.5" fill="#FDFCF9" text-anchor="middle">RELEASES REFERENCE A CONCRETE DIGEST, NOT AN ALIAS</text>
+</g></svg>
+</div>
+<div class="role"><b>Packages</b> · OCI / ORAS 制品仓库：容器镜像、模型权重、LoRA adapter、数据集、Agent bundle、MCP server 包。版本不可变，附 Attestation 与 SBOM、签名验签，按命名空间与保留策略治理。</div>
+<div class="diagram">
+<p class="diagram-cap">Releases · 发布次数 / 灰度流量</p>
+<svg viewBox="0 0 680 386" width="680" height="386" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>Releases · module architecture</title>
+<desc>Release / Channel（canary、prod）/ Environment。灰度比例、健康检查门禁、一键回滚、变更记录与审计；把 MaaS 的 adapter 版本、PaaS 部署、AaaS actor 模板统一成一次可回滚发布。</desc>
+<defs><marker id="arw-releases" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#141413" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<rect x="0" y="0" width="680" height="386" rx="14" fill="#F8F6F0"/>
+<g font-family="Menlo, SFMono-Regular, Consolas, monospace">
+<rect x="150" y="20" width="380" height="46" rx="8" fill="#141413"/>
+<text x="340" y="50" font-size="16" fill="#FDFCF9" text-anchor="middle">Releases</text>
+<rect x="130" y="86" width="420" height="46" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="340" y="114" font-size="11" fill="#141413" text-anchor="middle">Immutable version from Packages</text>
+<path d="M340 132 L340 146 M128 146 L552 146" fill="none" stroke="#141413" stroke-width="1.2"/>
+<path d="M128 146 L128 156" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-releases)"/>
+<path d="M340 146 L340 156" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-releases)"/>
+<path d="M552 146 L552 156" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-releases)"/>
+<rect x="30" y="158" width="196" height="92" rx="6" fill="#141413"/>
+<text x="128" y="190" font-size="12.5" fill="#FDFCF9" text-anchor="middle">CHANNEL</text>
+<text x="128" y="213" font-size="10.5" fill="#FDFCF9" text-anchor="middle">canary / prod</text>
+<text x="128" y="231" font-size="10.5" fill="#FDFCF9" text-anchor="middle">/ environment</text>
+<rect x="254" y="158" width="196" height="92" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="352" y="190" font-size="12.5" fill="#141413" text-anchor="middle">WEIGHT</text>
+<text x="352" y="213" font-size="10.5" fill="#7A756C" text-anchor="middle">health-gated</text>
+<text x="352" y="231" font-size="10.5" fill="#7A756C" text-anchor="middle">traffic rollout</text>
+<rect x="478" y="158" width="196" height="92" rx="6" fill="#FDFCF9" stroke="#4E60FF" stroke-width="1.2"/>
+<text x="576" y="190" font-size="12.5" fill="#141413" text-anchor="middle">ROLLBACK</text>
+<text x="576" y="213" font-size="10.5" fill="#4E60FF" text-anchor="middle">alias flip</text>
+<text x="576" y="231" font-size="10.5" fill="#4E60FF" text-anchor="middle">one step</text>
+<path d="M128 250 L128 266 M340 250 L340 266 M552 250 L552 266 M128 266 L552 266" fill="none" stroke="#141413" stroke-width="1.2"/>
+<path d="M340 266 L340 280" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-releases)"/>
+<rect x="130" y="282" width="420" height="46" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="340" y="310" font-size="11" fill="#141413" text-anchor="middle">One reversible release across all layers</text>
+<rect x="30" y="340" width="620" height="30" rx="6" fill="#4E60FF"/>
+<text x="340" y="359" font-size="10.5" fill="#FDFCF9" text-anchor="middle">SHARED PRIMITIVE: VERSION + ALIAS + TRAFFIC WEIGHT</text>
+</g></svg>
+</div>
+<div class="role"><b>Releases</b> · Release / Channel（canary、prod）/ Environment。灰度比例、健康检查门禁、一键回滚、变更记录与审计；把 MaaS 的 adapter 版本、PaaS 部署、AaaS actor 模板统一成一次可回滚发布。</div>
+<h2>0x05 : 资源底座</h2>
+<p>异构算力池只接受调度声明，不直接对租户暴露；控制面声明意图，资源池执行事实。</p>
+<div class="diagram">
+<p class="diagram-cap">Heterogeneous Resource Pool · 容量由 IaaS 计量</p>
+<svg viewBox="0 0 680 386" width="680" height="386" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>Heterogeneous Resource Pool · module architecture</title>
+<desc>异构算力底座：NVIDIA / AMD / Ascend / PPU / Hygon / Apple 与云厂商。GPU / NPU 设备事实与显存、CPU / RDMA 主机网络、对象存储与镜像缓存。控制面声明放置意图，资源池执行事实，不对租户直接暴露。</desc>
+<defs><marker id="arw-pool" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#141413" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<rect x="0" y="0" width="680" height="386" rx="14" fill="#F8F6F0"/>
+<g font-family="Menlo, SFMono-Regular, Consolas, monospace">
+<rect x="150" y="20" width="380" height="46" rx="8" fill="#141413"/>
+<text x="340" y="50" font-size="16" fill="#FDFCF9" text-anchor="middle">Heterogeneous Resource Pool</text>
+<rect x="130" y="86" width="420" height="46" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="340" y="114" font-size="11" fill="#141413" text-anchor="middle">NVIDIA · AMD · Ascend · PPU · Hygon · Apple · Cloud</text>
+<path d="M340 132 L340 146 M128 146 L552 146" fill="none" stroke="#141413" stroke-width="1.2"/>
+<path d="M128 146 L128 156" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-pool)"/>
+<path d="M340 146 L340 156" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-pool)"/>
+<path d="M552 146 L552 156" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-pool)"/>
+<rect x="30" y="158" width="196" height="92" rx="6" fill="#141413"/>
+<text x="128" y="190" font-size="12.5" fill="#FDFCF9" text-anchor="middle">GPU / NPU</text>
+<text x="128" y="213" font-size="10.5" fill="#FDFCF9" text-anchor="middle">device facts</text>
+<text x="128" y="231" font-size="10.5" fill="#FDFCF9" text-anchor="middle">memory + topology</text>
+<rect x="254" y="158" width="196" height="92" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="352" y="190" font-size="12.5" fill="#141413" text-anchor="middle">CPU · RDMA</text>
+<text x="352" y="213" font-size="10.5" fill="#7A756C" text-anchor="middle">host compute</text>
+<text x="352" y="231" font-size="10.5" fill="#7A756C" text-anchor="middle">east-west network</text>
+<rect x="478" y="158" width="196" height="92" rx="6" fill="#FDFCF9" stroke="#4E60FF" stroke-width="1.2"/>
+<text x="576" y="190" font-size="12.5" fill="#141413" text-anchor="middle">STORAGE</text>
+<text x="576" y="213" font-size="10.5" fill="#4E60FF" text-anchor="middle">object store</text>
+<text x="576" y="231" font-size="10.5" fill="#4E60FF" text-anchor="middle">image / weight cache</text>
+<path d="M128 250 L128 266 M340 250 L340 266 M552 250 L552 266 M128 266 L552 266" fill="none" stroke="#141413" stroke-width="1.2"/>
+<path d="M340 266 L340 280" fill="none" stroke="#141413" stroke-width="1.2" marker-end="url(#arw-pool)"/>
+<rect x="130" y="282" width="420" height="46" rx="6" fill="#FDFCF9" stroke="#141413" stroke-width="0.9"/>
+<text x="340" y="310" font-size="11" fill="#141413" text-anchor="middle">Scheduled capacity → IaaS / MaaS / TaaS</text>
+<rect x="30" y="340" width="620" height="30" rx="6" fill="#4E60FF"/>
+<text x="340" y="359" font-size="10.5" fill="#FDFCF9" text-anchor="middle">CONTROL PLANE DECLARES · POOL ENFORCES · NO DIRECT TENANT ACCESS</text>
+</g></svg>
+</div>
+<div class="role"><b>Heterogeneous Resource Pool</b> · 异构算力底座：NVIDIA / AMD / Ascend / PPU / Hygon / Apple 与云厂商。GPU / NPU 设备事实与显存、CPU / RDMA 主机网络、对象存储与镜像缓存。控制面声明放置意图，资源池执行事实，不对租户直接暴露。</div>
+<div class="foot">本图集为架构说明，不代表已实现的运行时状态。模块职责取自 AI OS 架构设计 v2.0 与统一 AI 云平台蓝图 v0.8；Rust 骨架 crate 为可编译架构骨架，非完整等价实现。</div>
+</div></body></html>
